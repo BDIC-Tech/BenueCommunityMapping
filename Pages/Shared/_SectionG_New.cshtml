@@ -1,0 +1,99 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="row g-3 mb-3">
+  <div class="col-md-4"><label class="form-label">Farming Type</label>
+    <div class="d-flex gap-3 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.FarmingSubsistence"  value="true" checked="@Model.FarmingSubsistence"  id="fSub"><label class="form-check-label" for="fSub">Subsistence</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.FarmingCommercial"   value="true" checked="@Model.FarmingCommercial"   id="fCom"><label class="form-check-label" for="fCom">Commercial</label></div>
+    </div>
+  </div>
+  <div class="col-md-8"><label class="form-label">Dominant Land Use (tick all)</label>
+    <div class="d-flex gap-3 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.DomLandResidential"  value="true" checked="@Model.DomLandResidential"  id="ldRes"><label class="form-check-label" for="ldRes">Residential</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.DomLandAgricultural" value="true" checked="@Model.DomLandAgricultural" id="ldAgr"><label class="form-check-label" for="ldAgr">Agricultural</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.DomLandCommercial"   value="true" checked="@Model.DomLandCommercial"   id="ldCom"><label class="form-check-label" for="ldCom">Commercial</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.DomLandIndustrial"   value="true" checked="@Model.DomLandIndustrial"   id="ldInd"><label class="form-check-label" for="ldInd">Industrial</label></div>
+    </div>
+  </div>
+  <div class="col-md-8"><label class="form-label">Main Water Sources</label>
+    <div class="d-flex flex-wrap gap-3 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.WaterSourceRiverStream" value="true" checked="@Model.WaterSourceRiverStream" id="wRiver"><label class="form-check-label" for="wRiver">River/Stream</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.WaterSourceBorehole"   value="true" checked="@Model.WaterSourceBorehole"   id="wBorehole"><label class="form-check-label" for="wBorehole">Borehole</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.WaterSourceWell"       value="true" checked="@Model.WaterSourceWell"       id="wWell"><label class="form-check-label" for="wWell">Well</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.WaterSourceRainwater"  value="true" checked="@Model.WaterSourceRainwater"  id="wRain"><label class="form-check-label" for="wRain">Rainwater</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionG.WaterSourcePipeBorne"  value="true" checked="@Model.WaterSourcePipeBorne"  id="wPipe"><label class="form-check-label" for="wPipe">Pipe-borne</label></div>
+    </div>
+  </div>
+  <div class="col-md-3"><label class="form-label">Irrigation Systems?</label>
+    <select name="SectionG.IrrigationSystemsPresent" class="form-select">
+      <option value="false" selected="@(!Model.IrrigationSystemsPresent)">No</option>
+      <option value="true"  selected="@(Model.IrrigationSystemsPresent)">Yes</option>
+    </select></div>
+  <div class="col-md-3"><label class="form-label">Extension Workers (no.)</label>
+    <input type="number" name="SectionG.NumberOfAgriculturalExtensionWorkers" class="form-control" value="@Model.NumberOfAgriculturalExtensionWorkers" min="0"/></div>
+  <div class="col-md-3"><label class="form-label">Tractors / Mechanised Farming?</label>
+    <select name="SectionG.AccessToTractorsOrMechanizedFarming" class="form-select">
+      <option value="false" selected="@(!Model.AccessToTractorsOrMechanizedFarming)">No</option>
+      <option value="true"  selected="@(Model.AccessToTractorsOrMechanizedFarming)">Yes</option>
+    </select></div>
+  <div class="col-md-3"><label class="form-label">General Environmental Condition</label>
+    <select name="SectionG.GeneralEnvironmentalCondition" class="form-select">
+      <option value="">– Select –</option>
+      @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.GeneralRating>())
+      { <option value="@v" selected="@(Model.GeneralEnvironmentalCondition == v)">@v.ToDisplayText()</option> }
+    </select></div>
+  <div class="col-md-6"><label class="form-label">Farmland Inaccessible (insecurity)?</label>
+    <select name="SectionG.FarmlandInaccessibleDueToInsecurity" class="form-select" id="farmlandSel">
+      <option value="false" selected="@(!Model.FarmlandInaccessibleDueToInsecurity)">No</option>
+      <option value="true"  selected="@(Model.FarmlandInaccessibleDueToInsecurity)">Yes</option>
+    </select></div>
+  <div class="col-md-6" id="farmlandPctDiv" style="display:@(Model.FarmlandInaccessibleDueToInsecurity ? "block" : "none")">
+    <label class="form-label">% of Farmland Abandoned</label>
+    <select name="SectionG.PercentFarmlandAbandoned" class="form-select">
+      <option value="">– Select –</option>
+      @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.FarmlandAbandonmentPercent>())
+      { <option value="@v" selected="@(Model.PercentFarmlandAbandoned == v)">@v.ToDisplayText()</option> }
+    </select></div>
+  <div class="col-md-6"><label class="form-label">Land Disputes (Indigenes vs IDPs/Settlers)?</label>
+    <select name="SectionG.LandDisputesBetweenIndigenesAndIDPs" class="form-select">
+      <option value="false" selected="@(!Model.LandDisputesBetweenIndigenesAndIDPs)">No</option>
+      <option value="true"  selected="@(Model.LandDisputesBetweenIndigenesAndIDPs)">Yes</option>
+    </select></div>
+  <div class="col-12"><label class="form-label">Challenges with Natural Features</label>
+    <textarea name="SectionG.MajorChallengesWithNaturalFeatures" class="form-control" rows="2">@Model.NaturalFeaturesChallenges</textarea></div>
+</div>
+
+<p class="section-divider">Environmental Challenges</p>
+<div class="table-responsive mb-3">
+  <table class="dyn-table"><thead><tr>
+    <th>Challenge</th><th>Frequency</th><th>Time of Year</th><th>Areas Affected</th>
+    <th>Severity</th><th>Year Started</th><th>Most Affected</th><th>Interventions?</th><th>Who Intervened</th><th>Helped?</th>
+  </tr></thead>
+  <tbody>
+    @{
+      
+    }
+    @foreach (var ct in Enum.GetValues<BenueCommunityMapping.Models.Survey.EnvironmentalChallengeType>())
+    {
+      var existing = Model.EnvironmentalChallenges.FirstOrDefault(c => c.ChallengeType == ct);
+      var pfx = $"SectionG.EnvChallenge.{ct}";
+      <tr>
+        <td style="font-weight:600;color:var(--bsbs-green);white-space:nowrap">@ct</td>
+        <td><select name="@(pfx).Frequency"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.OccurrenceFrequency>()){<option value="@v" selected="@(existing?.Frequency==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><input name="@(pfx).TimeOfYear" value="@(existing?.TimeOfYear)" placeholder="Season"/></td>
+        <td><input name="@(pfx).AreasAffected" value="@(existing?.AreasAffected)" placeholder="e.g. Farmland"/></td>
+        <td><select name="@(pfx).Severity"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.SeverityLevel>()){<option value="@v" selected="@(existing?.Severity==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><input type="number" name="@(pfx).YearStarted" value="@(existing?.YearStarted)" placeholder="YYYY" style="min-width:68px"/></td>
+        <td><input name="@(pfx).MostAffected" value="@(existing?.MostAffected)" placeholder="Houses/Farms"/></td>
+        <td><select name="@(pfx).InterventionsCarriedOut"><option value="">–</option><option value="true" selected="@(existing?.InterventionsCarriedOut==true)">Yes</option><option value="false" selected="@(existing?.InterventionsCarriedOut==false)">No</option></select></td>
+        <td><input name="@(pfx).WhoIntervened" value="@(existing?.WhoIntervened)" placeholder="Organization"/></td>
+        <td><select name="@(pfx).InterventionsHelped"><option value="">–</option><option value="true" selected="@(existing?.InterventionsHelped==true)">Yes</option><option value="false" selected="@(existing?.InterventionsHelped==false)">No</option></select></td>
+      </tr>
+    }
+  </tbody></table>
+</div>
+
+<script>
+  document.getElementById('farmlandSel')?.addEventListener('change', function(){
+    document.getElementById('farmlandPctDiv').style.display = this.value==='true'?'block':'none';
+  });
+</script>

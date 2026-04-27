@@ -1,0 +1,22 @@
+@model IReadOnlyList<BenueCommunityMapping.Services.Analytics.CrossTabRow>
+@if (Model is null || !Model.Any())
+{
+    <p class="text-muted small">No data available.</p>
+}
+else
+{
+    @foreach (var row in Model)
+    {
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span style="min-width:130px;font-size:.8rem;color:var(--bsbs-muted)">@row.Category</span>
+            <div class="flex-fill bg-light rounded" style="height:14px">
+                <div class="rounded"
+                     style="width:@row.Percentage%;height:14px;background:var(--bsbs-green);transition:width .4s ease">
+                </div>
+            </div>
+            <span style="min-width:55px;font-size:.78rem;text-align:right;color:var(--bsbs-dark)">
+                @row.Count <span class="text-muted">(@row.Percentage%)</span>
+            </span>
+        </div>
+    }
+}

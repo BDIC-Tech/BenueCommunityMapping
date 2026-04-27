@@ -1,0 +1,557 @@
+using BenueCommunityMapping.Authorization;
+using BenueCommunityMapping.Data;
+using BenueCommunityMapping.Models;
+using BenueCommunityMapping.Models.Survey;
+using BenueCommunityMapping.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+
+namespace BenueCommunityMapping.Pages.Questionnaire
+{
+    public class EditModel : PageModel
+    {
+        private readonly ISubmissionService            _submissions;
+        private readonly UserManager<ApplicationUser>  _userMgr;
+        private readonly IAuthorizationService         _authz;
+        private readonly AppDbContext                  _db;
+
+        public EditModel(
+            ISubmissionService           submissions,
+            UserManager<ApplicationUser> userMgr,
+            IAuthorizationService        authz,
+            AppDbContext                 db)
+        {
+            _submissions = submissions;
+            _userMgr     = userMgr;
+            _authz       = authz;
+            _db          = db;
+        }
+
+        public QuestionnaireSubmission Submission  { get; private set; } = null!;
+        public bool IsNew                          { get; private set; }
+
+        // Cascading dropdown data
+        public List<Models.Geography.LocalGovernmentArea> LGAs        { get; private set; } = [];
+        public List<Models.Geography.Ward>                Wards       { get; private set; } = [];
+        public List<Models.Geography.Kindred>             Kindreds    { get; private set; } = [];
+        public List<Models.Geography.Community>           Communities { get; private set; } = [];
+
+        // ── GET ──────────────────────────────────────────────────────
+        public async Task<IActionResult> OnGetAsync(Guid? id)
+        {
+            var user = await _userMgr.GetUserAsync(User);
+            if (user is null) return Challenge();
+            user.CachedRole = (await _userMgr.GetRolesAsync(user)).FirstOrDefault() ?? AppRoles.Agent;
+
+            await LoadGeoDropdownsAsync();
+
+            if (id.HasValue && id != Guid.Empty)
+            {
+                var existing = await _submissions.GetByIdAsync(id.Value);
+                if (existing is null) return NotFound();
+
+                var auth = await _authz.AuthorizeAsync(User, existing, new SubmissionOwnerRequirement());
+                if (!auth.Succeeded) return Forbid();
+
+                if (existing.Status != SubmissionStatus.Draft && user.CachedRole != AppRoles.Admin)
+                {
+                    TempData["Error"] = "Only Draft submissions can be edited.";
+                    return RedirectToPage("/Agent/MySubmissions");
+                }
+
+                Submission = existing;
+                IsNew      = false;
+
+                // Pre-load ward/kindred/community for the dropdowns to show correct selection
+                if (existing.Community is not null)
+                {
+                    Wards       = await _db.Wards
+                        .Where(w => w.LocalGovernmentAreaId == existing.Community.Kindred.Ward.LocalGovernmentAreaId)
+                        .OrderBy(w => w.Name).ToListAsync();
+                    Kindreds    = await _db.Kindreds
+                        .Where(k => k.WardId == existing.Community.Kindred.WardId)
+                        .OrderBy(k => k.Name).ToListAsync();
+                    Communities = await _db.Communities
+                        .Where(c => c.KindredId == existing.Community.KindredId)
+                        .OrderBy(c => c.Name).ToListAsync();
+                }
+            }
+            else
+            {
+                // New draft — no communityId yet; agent must select via cascading dropdowns
+                Submission = new QuestionnaireSubmission
+                {
+                    Id     = Guid.Empty,
+                    Status = SubmissionStatus.Draft
+                };
+                IsNew = true;
+            }
+
+            return Page();
+        }
+
+        // ── POST: Save / Submit ───────────────────────────────────────
+        public async Task<IActionResult> OnPostAsync()
+        {
+            var user = await _userMgr.GetUserAsync(User);
+            if (user is null) return Challenge();
+            user.CachedRole = (await _userMgr.GetRolesAsync(user)).FirstOrDefault() ?? AppRoles.Agent;
+
+            // Pull key ids from form
+            if (!Guid.TryParse(Request.Form["submissionId"], out Guid submissionId))
+                submissionId = Guid.Empty;
+
+            if (!int.TryParse(Request.Form["communityId"], out int communityId) || communityId == 0)
+            {
+                await LoadGeoDropdownsAsync();
+                TempData["Error"] = "Please select a community before saving.";
+                Submission = new QuestionnaireSubmission { Id = Guid.Empty, Status = SubmissionStatus.Draft };
+                IsNew = true;
+                return Page();
+            }
+
+            string action = Request.Form["action"].ToString();
+
+            // Get or create submission
+            QuestionnaireSubmission submission;
+            if (submissionId == Guid.Empty)
+            {
+                submission = await _submissions.CreateDraftAsync(user.Id, user.CoordinatorId, communityId);
+                submissionId = submission.Id;
+            }
+            else
+            {
+                submission = await _submissions.GetByIdAsync(submissionId)
+                    ?? throw new KeyNotFoundException("Submission not found.");
+                var auth = await _authz.AuthorizeAsync(User, submission, new SubmissionOwnerRequirement());
+                if (!auth.Succeeded) return Forbid();
+            }
+
+            // Update community link
+            submission.CommunityId = communityId;
+
+            // ── SECTION A scalars ─────────────────────────────────────
+            submission.EstimatedNumberOfHouseholds    = ParseNullInt("SectionA.EstimatedNumberOfHouseholds");
+            submission.AffectedByFarmerHerderConflict = ParseBool("SectionA.AffectedByFarmerHerderConflict");
+            submission.ConflictStartYear              = ParseNullInt("SectionA.ConflictStartYear");
+            submission.IsHostCommunityToIDPs          = ParseBool("SectionA.IsHostCommunityToIDPs");
+            submission.IDPHouseholdsOutsideCamps      = ParseNullInt("SectionA.IDPHouseholdsOutsideCamps");
+            submission.MajorFamilyLineages            = F("SectionA.MajorFamilyLineages");
+
+            // ── SECTION B ─────────────────────────────────────────────
+            submission.MarketChallenges                       = F("SectionB.MajorChallenges");
+            submission.MarketActivitiesAffectedByInsecurity   = ParseBool("SectionB.MarketActivitiesAffectedByInsecurity");
+            submission.TradersFromOutsideAfraid               = ParseBool("SectionB.TradersFromOutsideAfraid");
+            submission.CommunityPaysIllegalLevy               = ParseBool("SectionB.CommunityPaysIllegalLevy");
+
+            // Rebuild Markets collection
+            RebuildCollection(submission.Markets, "SectionB.Markets", (i, row) => new Market
+            {
+                SubmissionId     = submission.Id,
+                Name             = row("Name"),
+                Location         = row("Location"),
+                SizeSquareMeters = ParseNullDouble($"SectionB.Markets[{i}].SizeSquareMeters"),
+                Type             = ParseNullEnum<MarketType>($"SectionB.Markets[{i}].Type"),
+                StorageFacilities = row("StorageFacilities"),
+                MainGoodsSold    = row("MainGoodsSold"),
+                FarmProduceSold  = row("FarmProduceSold"),
+                MarketStatus     = ParseNullEnum<FunctionalStatus>($"SectionB.Markets[{i}].MarketStatus"),
+                InfrastructureCondition = ParseNullEnum<InfrastructureCondition>($"SectionB.Markets[{i}].InfrastructureCondition"),
+                MostActiveTimeOfYear = row("MostActiveTimeOfYear"),
+                WomenAndYouthMajorParticipants = ParseNullBool($"SectionB.Markets[{i}].WomenAndYouthMajorParticipants")
+            });
+
+            // ── SECTION C ─────────────────────────────────────────────
+            submission.FunctionalAmbulanceOrReferral                   = ParseBool("SectionC.FunctionalAmbulanceOrReferral");
+            submission.MajorDiseasesReported                           = F("SectionC.MajorDiseasesReported");
+            submission.WomenDiedDuringChildbirthLast2Years             = ParseBool("SectionC.WomenDiedDuringChildbirthLast2Years");
+            submission.PregnantWomenCanAccessEmergencyTransportAtNight = ParseBool("SectionC.PregnantWomenCanAccessEmergencyTransportAtNight");
+            submission.NearestHealthFacilityIfNone                     = F("SectionC.NearestHealthFacilityIfNoneInCommunity");
+            RebuildCollection(submission.HealthFacilities, "SectionC.HealthFacilities", (i, row) => new HealthFacility
+            {
+                SubmissionId                     = submission.Id,
+                Name                             = row("Name"),
+                Location                         = row("Location"),
+                Type                             = ParseNullEnum<HealthFacilityType>($"SectionC.HealthFacilities[{i}].Type"),
+                DistanceFromCentre               = ParseNullEnum<DistanceCategory>($"SectionC.HealthFacilities[{i}].DistanceFromCentre"),
+                HealthcareStaffAvailability      = ParseNullEnum<StaffAvailability>($"SectionC.HealthFacilities[{i}].HealthcareStaffAvailability"),
+                InfrastructureCondition          = ParseNullEnum<InfrastructureCondition>($"SectionC.HealthFacilities[{i}].InfrastructureCondition"),
+                ServiceDeliveryCondition         = ParseNullEnum<ServiceDeliveryCondition>($"SectionC.HealthFacilities[{i}].ServiceDeliveryCondition"),
+                WhoBuilt                         = row("WhoBuilt"),
+                YearEstablished                  = ParseNullInt($"SectionC.HealthFacilities[{i}].YearEstablished"),
+                YearLastRenovated                = ParseNullInt($"SectionC.HealthFacilities[{i}].YearLastRenovated"),
+                InfrastructureWorkQuality        = ParseNullEnum<WorkQualityRating>($"SectionC.HealthFacilities[{i}].InfrastructureWorkQuality"),
+                IDPsAllowedWithoutDiscrimination = ParseNullBool($"SectionC.HealthFacilities[{i}].IDPsAllowedWithoutDiscrimination"),
+                EssentialDrugsAvailability       = ParseNullEnum<DrugAvailability>($"SectionC.HealthFacilities[{i}].EssentialDrugsAvailability")
+            });
+
+            // ── SECTION D ─────────────────────────────────────────────
+            submission.EducationKeyChallenges         = F("SectionD.KeyChallenges");
+            submission.NearestInstitutionIfNone        = F("SectionD.NearestInstitutionIfNoneInCommunity");
+            submission.ChildrenNotInSchool             = ParseNullInt("SectionD.NumberOfSchoolAgeChildrenNotInSchool");
+            submission.OutOfSchoolDueToPoverty         = ParseBool("SectionD.OutOfSchoolDueToPoverty");
+            submission.OutOfSchoolDueToInsecurity      = ParseBool("SectionD.OutOfSchoolDueToInsecurity");
+            submission.OutOfSchoolDueToChildLabour     = ParseBool("SectionD.OutOfSchoolDueToChildLabour");
+            submission.OutOfSchoolDueToEarlyMarriage   = ParseBool("SectionD.OutOfSchoolDueToEarlyMarriage");
+            submission.OutOfSchoolDueToDistance        = ParseBool("SectionD.OutOfSchoolDueToDistance");
+            submission.OutOfSchoolDueToIDPRelated      = ParseBool("SectionD.OutOfSchoolDueToIDPRelated");
+            submission.SchoolsCurrentlyHostingIDPs     = ParseBool("SectionD.SchoolsCurrentlyHostingIDPs");
+            RebuildCollection(submission.EducationalInstitutions, "SectionD.Institutions", (i, row) => new EducationalInstitution
+            {
+                SubmissionId               = submission.Id,
+                Name                       = row("Name"),
+                Location                   = row("Location"),
+                Type                       = ParseNullEnum<EducationLevel>($"SectionD.Institutions[{i}].Type"),
+                Owner                      = row("Owner"),
+                DistanceFromCentre         = ParseNullEnum<DistanceCategory>($"SectionD.Institutions[{i}].DistanceFromCentre"),
+                TeacherAvailability        = ParseNullEnum<StaffAvailability>($"SectionD.Institutions[{i}].TeacherAvailability"),
+                InfrastructureCondition    = ParseNullEnum<InfrastructureCondition>($"SectionD.Institutions[{i}].InfrastructureCondition"),
+                ServiceDeliveryQuality     = ParseNullEnum<ServiceDeliveryCondition>($"SectionD.Institutions[{i}].ServiceDeliveryQuality"),
+                WhoBuilt                   = row("WhoBuilt"),
+                YearEstablished            = ParseNullInt($"SectionD.Institutions[{i}].YearEstablished"),
+                YearLastRenovated          = ParseNullInt($"SectionD.Institutions[{i}].YearLastRenovated"),
+                InfrastructureWorkQuality  = ParseNullEnum<WorkQualityRating>($"SectionD.Institutions[{i}].InfrastructureWorkQuality"),
+                DestroyedOrClosedDueToConflict = ParseNullBool($"SectionD.Institutions[{i}].DestroyedOrClosedDueToConflict"),
+                ConflictClosureYear        = ParseNullInt($"SectionD.Institutions[{i}].ConflictClosureYear")
+            });
+
+            // ── SECTION E ─────────────────────────────────────────────
+            submission.MainAccessRoadType   = ParseNullEnum<RoadSurfaceType>("SectionE.MainAccessRoadType");
+            submission.RainSeasonMotorcycle = ParseBool("SectionE.RainSeasonMotorcycle");
+            submission.RainSeasonCarBus     = ParseBool("SectionE.RainSeasonCarBus");
+            submission.RainSeasonTruck      = ParseBool("SectionE.RainSeasonTruck");
+            submission.RainSeasonWalking    = ParseBool("SectionE.RainSeasonWalking");
+            submission.RainSeasonCanoeBoat  = ParseBool("SectionE.RainSeasonCanoeBoat");
+            submission.DrySeasonMotorcycle  = ParseBool("SectionE.DrySeasonMotorcycle");
+            submission.DrySeasonCarBus      = ParseBool("SectionE.DrySeasonCarBus");
+            submission.DrySeasonTruck       = ParseBool("SectionE.DrySeasonTruck");
+            submission.DrySeasonWalking     = ParseBool("SectionE.DrySeasonWalking");
+            submission.DrySeasonCanoeBoat   = ParseBool("SectionE.DrySeasonCanoeBoat");
+            submission.TransportChallenges  = F("SectionE.TransportChallenges");
+            RebuildCollection(submission.AccessRoads, "SectionE.AccessRoads", (i, row) => new AccessRoad
+            {
+                SubmissionId              = submission.Id,
+                RoadName                  = row("RoadName"),
+                RainySeasonCondition      = ParseNullEnum<RoadPassability>($"SectionE.AccessRoads[{i}].RainySeasonCondition"),
+                DrySeasonCondition        = ParseNullEnum<RoadPassability>($"SectionE.AccessRoads[{i}].DrySeasonCondition"),
+                DrainageSystem            = ParseNullEnum<DrainagePresence>($"SectionE.AccessRoads[{i}].DrainageSystem"),
+                WhoBuilt                  = row("WhoBuilt"),
+                YearConstructed           = ParseNullInt($"SectionE.AccessRoads[{i}].YearConstructed"),
+                YearLastRenovated         = ParseNullInt($"SectionE.AccessRoads[{i}].YearLastRenovated"),
+                InfrastructureWorkQuality = ParseNullEnum<WorkQualityRating>($"SectionE.AccessRoads[{i}].InfrastructureWorkQuality"),
+                MonthsAccessVeryDifficult = ParseNullInt($"SectionE.AccessRoads[{i}].MonthsAccessVeryDifficult"),
+                DangersFromBadAccess      = ParseNullEnum<RoadDangerLevel>($"SectionE.AccessRoads[{i}].DangersFromBadAccess")
+            });
+
+            // ── SECTION F ─────────────────────────────────────────────
+            submission.FinancialServicesChallenges       = F("SectionF.MajorChallenges");
+            submission.RelyMoreOnInformalSavingsGroups   = ParseBool("SectionF.RelyMoreOnInformalSavingsGroups");
+            submission.MembersLostMoneyToFailedPOSOrFraud = ParseBool("SectionF.MembersLostMoneyToFailedPOSOrFraud");
+            RebuildCollection(submission.FinancialServices, "SectionF.FinancialServices", (i, row) => new FinancialService
+            {
+                SubmissionId             = submission.Id,
+                Name                     = row("Name"),
+                Location                 = row("Location"),
+                Type                     = ParseNullEnum<FinancialServiceType>($"SectionF.FinancialServices[{i}].Type"),
+                OffersLoansOrCredit      = ParseNullBool($"SectionF.FinancialServices[{i}].OffersLoansOrCredit"),
+                DistanceFromCentre       = ParseNullEnum<DistanceCategory>($"SectionF.FinancialServices[{i}].DistanceFromCentre"),
+                CommunityFindsBeneficial = ParseNullBool($"SectionF.FinancialServices[{i}].CommunityFindsBeneficial"),
+                WomenAndYouthHaveEqualAccess = ParseNullBool($"SectionF.FinancialServices[{i}].WomenAndYouthHaveEqualAccess")
+            });
+
+            // ── SECTION G ─────────────────────────────────────────────
+            submission.NaturalFeaturesChallenges             = F("SectionG.MajorChallengesWithNaturalFeatures");
+            submission.FarmingSubsistence                    = ParseBool("SectionG.FarmingSubsistence");
+            submission.FarmingCommercial                     = ParseBool("SectionG.FarmingCommercial");
+            submission.DomLandResidential                    = ParseBool("SectionG.DomLandResidential");
+            submission.DomLandAgricultural                   = ParseBool("SectionG.DomLandAgricultural");
+            submission.DomLandCommercial                     = ParseBool("SectionG.DomLandCommercial");
+            submission.DomLandIndustrial                     = ParseBool("SectionG.DomLandIndustrial");
+            submission.WaterSourceRiverStream                = ParseBool("SectionG.WaterSourceRiverStream");
+            submission.WaterSourceBorehole                   = ParseBool("SectionG.WaterSourceBorehole");
+            submission.WaterSourceWell                       = ParseBool("SectionG.WaterSourceWell");
+            submission.WaterSourceRainwater                  = ParseBool("SectionG.WaterSourceRainwater");
+            submission.WaterSourcePipeBorne                  = ParseBool("SectionG.WaterSourcePipeBorne");
+            submission.IrrigationSystemsPresent              = ParseBool("SectionG.IrrigationSystemsPresent");
+            submission.NumberOfAgriculturalExtensionWorkers  = ParseNullInt("SectionG.NumberOfAgriculturalExtensionWorkers");
+            submission.FarmlandInaccessibleDueToInsecurity   = ParseBool("SectionG.FarmlandInaccessibleDueToInsecurity");
+            submission.PercentFarmlandAbandoned              = ParseNullEnum<FarmlandAbandonmentPercent>("SectionG.PercentFarmlandAbandoned");
+            submission.LandDisputesBetweenIndigenesAndIDPs   = ParseBool("SectionG.LandDisputesBetweenIndigenesAndIDPs");
+            submission.AccessToTractorsOrMechanizedFarming   = ParseBool("SectionG.AccessToTractorsOrMechanizedFarming");
+            submission.GeneralEnvironmentalCondition         = ParseNullEnum<GeneralRating>("SectionG.GeneralEnvironmentalCondition");
+            submission.UrgentWasteManagement                 = ParseBool("SectionG.UrgentWasteManagement");
+            submission.UrgentDrainage                        = ParseBool("SectionG.UrgentDrainage");
+            submission.UrgentTreePlanting                    = ParseBool("SectionG.UrgentTreePlanting");
+            submission.UrgentFloodControl                    = ParseBool("SectionG.UrgentFloodControl");
+            submission.UrgentPollutionControl                = ParseBool("SectionG.UrgentPollutionControl");
+
+            // Environmental challenges (one row per type, pre-existing rows updated)
+            foreach (var ct in Enum.GetValues<EnvironmentalChallengeType>())
+            {
+                var prefix = $"SectionG.EnvChallenge.{ct}";
+                var existing = submission.EnvironmentalChallenges.FirstOrDefault(e => e.ChallengeType == ct);
+                if (existing is null)
+                {
+                    existing = new EnvironmentalChallenge { SubmissionId = submission.Id, ChallengeType = ct };
+                    submission.EnvironmentalChallenges.Add(existing);
+                }
+                existing.Frequency           = ParseNullEnum<OccurrenceFrequency>($"{prefix}.Frequency");
+                existing.TimeOfYear          = F($"{prefix}.TimeOfYear");
+                existing.AreasAffected       = F($"{prefix}.AreasAffected");
+                existing.Severity            = ParseNullEnum<SeverityLevel>($"{prefix}.Severity");
+                existing.YearStarted         = ParseNullInt($"{prefix}.YearStarted");
+                existing.MostAffected        = F($"{prefix}.MostAffected");
+                existing.InterventionsCarriedOut = ParseNullBool($"{prefix}.InterventionsCarriedOut");
+                existing.YearOfIntervention  = ParseNullInt($"{prefix}.YearOfIntervention");
+                existing.WhoIntervened       = F($"{prefix}.WhoIntervened");
+                existing.InterventionsHelped = ParseNullBool($"{prefix}.InterventionsHelped");
+            }
+
+            // ── SECTION H ─────────────────────────────────────────────
+            submission.IntoleranceThreatensReligion           = ParseBool("SectionH.IntoleranceThreatensReligion");
+            submission.ExtremismThreatensReligion             = ParseBool("SectionH.ExtremismThreatensReligion");
+            submission.DiscriminationThreatensReligion        = ParseBool("SectionH.DiscriminationThreatensReligion");
+            submission.CrisisThreatensReligion                = ParseBool("SectionH.CrisisThreatensReligion");
+            submission.PoliticalInterferenceThreatensReligion = ParseBool("SectionH.PoliticalInterferenceThreatensReligion");
+            submission.NoThreatToReligion                     = ParseBool("SectionH.NoThreatToReligion");
+            submission.ReligiousOrEthnicTensionsCausedConflict = ParseBool("SectionH.ReligiousOrEthnicTensionsCausedConflict");
+
+            foreach (var ct in Enum.GetValues<ReligiousWorshipCentreType>())
+            {
+                var prefix = $"SectionH.ReligiousGroup.{ct}";
+                var existing = submission.ReligiousGroups.FirstOrDefault(r => r.Type == ct);
+                if (existing is null)
+                {
+                    existing = new ReligiousGroup { SubmissionId = submission.Id, Type = ct };
+                    submission.ReligiousGroups.Add(existing);
+                }
+                existing.NumberExisting                        = ParseNullInt($"{prefix}.NumberExisting");
+                existing.EstimatedMembershipPopulation         = ParseNullInt($"{prefix}.EstimatedMembershipPopulation");
+                existing.LeadersActivelyParticipateInPeaceBuilding = ParseNullBool($"{prefix}.LeadersParticipate");
+                existing.NumberNoLongerInUseOrDestroyed        = ParseNullInt($"{prefix}.NumberDestroyed");
+            }
+
+            // ── SECTION I ─────────────────────────────────────────────
+            submission.InternetSourceMobileData    = ParseBool("SectionI.InternetSourceMobileData");
+            submission.InternetSourceBroadbandFibre = ParseBool("SectionI.InternetSourceBroadbandFibre");
+            submission.InternetSourceSatellite      = ParseBool("SectionI.InternetSourceSatellite");
+            submission.CommunicationBlackSpotsExist = ParseBool("SectionI.CommunicationBlackSpotsExist");
+            submission.InfoChannelPhoneCallsSMS     = ParseBool("SectionI.InfoChannelPhoneCallsSMS");
+            submission.InfoChannelTelevision        = ParseBool("SectionI.InfoChannelTelevision");
+            submission.InfoChannelRadio             = ParseBool("SectionI.InfoChannelRadio");
+            submission.InfoChannelTownCrier         = ParseBool("SectionI.InfoChannelTownCrier");
+            submission.InfoChannelReligiousCentres  = ParseBool("SectionI.InfoChannelReligiousCentres");
+            submission.InfoChannelCommunityMeetings = ParseBool("SectionI.InfoChannelCommunityMeetings");
+            submission.InfoChannelSocialMedia       = ParseBool("SectionI.InfoChannelSocialMedia");
+            submission.TelecommunicationChallenges  = F("SectionI.TelecommunicationChallenges");
+
+            foreach (var prov in Enum.GetValues<GSMProvider>())
+            {
+                var prefix  = $"SectionI.GSM.{prov}";
+                var existing = submission.GSMNetworks.FirstOrDefault(n => n.Provider == prov);
+                if (existing is null)
+                {
+                    existing = new GSMNetwork { SubmissionId = submission.Id, Provider = prov };
+                    submission.GSMNetworks.Add(existing);
+                }
+                existing.CoverageStrength = ParseNullEnum<NetworkCoverage>($"{prefix}.Coverage");
+                existing.AvailabilityArea = ParseNullEnum<NetworkAvailability>($"{prefix}.Availability");
+                existing.CallAndSMSQuality = ParseNullEnum<NetworkQuality>($"{prefix}.CallQuality");
+                existing.InternetQuality  = ParseNullEnum<NetworkQuality>($"{prefix}.InternetQuality");
+                existing.NetworkType      = ParseNullEnum<NetworkGeneration>($"{prefix}.NetworkType");
+                existing.AffectedSecurityReportingOrEmergencyCalls = ParseNullBool($"{prefix}.AffectsEmergency");
+            }
+
+            // ── SECTION J ─────────────────────────────────────────────
+            submission.GeneralSecuritySituation               = ParseNullEnum<SecuritySituation>("SectionJ.GeneralSecuritySituation");
+            submission.SecIssueNone                           = ParseBool("SectionJ.SecurityIssueNone");
+            submission.SecIssueFarmerHerder                   = ParseBool("SectionJ.SecurityIssueFarmerHerderConflict");
+            submission.SecIssueCommunalCrisis                 = ParseBool("SectionJ.SecurityIssueCommunalCrisis");
+            submission.SecIssueBanditry                       = ParseBool("SectionJ.SecurityIssueBanditryKidnapping");
+            submission.SecIssueTensionWithOps                 = ParseBool("SectionJ.SecurityIssueTensionWithSecurityOperatives");
+            submission.SecIssueTheft                          = ParseBool("SectionJ.SecurityIssueTheft");
+            submission.SecIssueYouthRestiveness               = ParseBool("SectionJ.SecurityIssueYouthRestiveness");
+            submission.SecIssueArmedRobbery                   = ParseBool("SectionJ.SecurityIssueArmedRobbery");
+            submission.SecIssueCultism                        = ParseBool("SectionJ.SecurityIssueCultism");
+            submission.DispResTraditionalLeaders              = ParseBool("SectionJ.DisputeResolutionTraditionalLeaders");
+            submission.DispResReligiousLeaders                = ParseBool("SectionJ.DisputeResolutionReligiousLeaders");
+            submission.DispResLocalGovt                       = ParseBool("SectionJ.DisputeResolutionLocalGovernment");
+            submission.DispResCourts                          = ParseBool("SectionJ.DisputeResolutionCourts");
+            submission.DispResADR                             = ParseBool("SectionJ.DisputeResolutionAlternativeDisputeResolution");
+            submission.MostCommonDisputeResolution            = ParseNullEnum<DisputeResolutionMethod>("SectionJ.MostCommonDisputeResolution");
+            submission.MembersHadToSleepInBushOrFlee          = ParseBool("SectionJ.MembersHadToSleepInBushOrFlee");
+            submission.NearbyCommunitiesCompletelyDestroyed   = ParseBool("SectionJ.NearbyCommunitiesCompletelyDestroyed");
+            submission.WomenAndGirlsExposedToGBV              = ParseBool("SectionJ.WomenAndGirlsExposedToGBVDueToDisplacement");
+            submission.EstimatedIDPsOutsideCamps              = ParseNullInt("SectionJ.EstimatedIDPsInHostCommunityOutsideCamps");
+            submission.DisplacementCauseFarmerHerder          = ParseBool("SectionJ.DisplacementCauseFarmerHerderCrisis");
+            submission.DisplacementCauseArmedConflict         = ParseBool("SectionJ.DisplacementCauseArmedConflict");
+            submission.DisplacementCauseFlooding              = ParseBool("SectionJ.DisplacementCauseFlooding");
+            submission.DisplacementCauseCommunalViolence      = ParseBool("SectionJ.DisplacementCauseCommunalViolence");
+
+            foreach (var st in Enum.GetValues<SecurityServiceType>())
+            {
+                var prefix  = $"SectionJ.SecSvc.{st}";
+                var existing = submission.SecurityServices.FirstOrDefault(s => s.Type == st);
+                if (existing is null)
+                {
+                    existing = new SecurityService { SubmissionId = submission.Id, Type = st };
+                    submission.SecurityServices.Add(existing);
+                }
+                existing.NumberFrequentlyAvailable   = ParseNullInt($"{prefix}.Number");
+                existing.SecurityPostType            = ParseNullEnum<SecurityPostType>($"{prefix}.PostType");
+                existing.CommunityPerception         = ParseNullEnum<CommunityPerceptionRating>($"{prefix}.Perception");
+                existing.CommunityNeedsMoreOperatives = ParseNullBool($"{prefix}.NeedsMore");
+                existing.PermanentlyStationed        = ParseNullBool($"{prefix}.Permanent");
+                existing.AverageResponseTime         = ParseNullEnum<ResponseTime>($"{prefix}.ResponseTime");
+            }
+
+            // Q18: Electricity Sources
+            submission.ElecSourcePublicPower = ParseBool("SectionJ.ElecSourcePublicPower");
+            submission.ElecSourceGenerators  = ParseBool("SectionJ.ElecSourceGenerators");
+            submission.ElecSourceSolarPower  = ParseBool("SectionJ.ElecSourceSolarPower");
+            submission.ElecSourceOther       = ParseBool("SectionJ.ElecSourceOther");
+            submission.ElecSourceOtherSpecify= F("SectionJ.ElecSourceOtherSpecify");
+
+            // Q17: MigrantSettlerActivities
+            RebuildCollection(submission.MigrantSettlerActivities, "SectionJ.MigrantSettler", (i, row) => new MigrantSettlerActivity
+            {
+                SubmissionId              = submission.Id,
+                BusinessOrDevelopmentType = row("BusinessOrDevelopmentType"),
+                ServicesOffered           = row("ServicesOffered"),
+                YearCommenced             = ParseNullInt($"SectionJ.MigrantSettler[{i}].YearCommenced"),
+                Location                  = row("Location"),
+                NumberOfIndigenesEmployed = ParseNullInt($"SectionJ.MigrantSettler[{i}].NumberOfIndigenesEmployed"),
+                CommunityBenefiting       = ParseNullBool($"SectionJ.MigrantSettler[{i}].CommunityBenefiting"),
+                ChallengesWithOwners      = row("ChallengesWithOwners")
+            });
+
+            // Q19: NGOs
+            RebuildCollection(submission.NGOs, "SectionJ.NGO", (i, row) => new NGO
+            {
+                SubmissionId               = submission.Id,
+                Name                       = row("Name"),
+                ServicesInIDPCamp          = row("ServicesInIDPCamp"),
+                YearCommencedInIDPCamp     = ParseNullInt($"SectionJ.NGO[{i}].YearCommencedInIDPCamp"),
+                ServicesToHostCommunity    = row("ServicesToHostCommunity"),
+                YearCommencedHostCommunity = ParseNullInt($"SectionJ.NGO[{i}].YearCommencedHostCommunity"),
+                CommunityIsSatisfied       = ParseNullBool($"SectionJ.NGO[{i}].CommunityIsSatisfied")
+            });
+
+            // ── SECTION K — Priority Needs ────────────────────────────
+            for (int rank = 1; rank <= 5; rank++)
+            {
+                var desc = F($"SectionK.PriorityNeed{rank}");
+                if (!string.IsNullOrWhiteSpace(desc))
+                    submission.PriorityNeeds.Add(new PriorityNeed
+                    {
+                        SubmissionId = submission.Id,
+                        Rank         = rank,
+                        Description  = desc.Trim()
+                    });
+            }
+
+            // ── CONSENT ────────────────────────────────────────────────
+            var sigRoles = new[] { "TraditionalRuler", "WomenLeader", "YouthLeader", "ReligiousLeader" };
+            foreach (var role in sigRoles)
+            {
+                var name  = F($"Consent.{role}.Name");
+                var phone = F($"Consent.{role}.PhoneNumber");
+                var sig   = F($"Consent.{role}.Signature");
+                if (!string.IsNullOrWhiteSpace(name) || !string.IsNullOrWhiteSpace(phone))
+                    submission.ConsentSignatories.Add(new ConsentSignatory
+                    {
+                        SubmissionId = submission.Id, Role = role,
+                        Name = name, PhoneNumber = phone, Signature = sig
+                    });
+            }
+            var authLevels = new[]
+            {
+                ("ClanLevelTorKpande",    "Clan Level",    "Tor Kpande"),
+                ("KindredLevelOrtar",     "Kindred Level", "Ortar"),
+                ("CouncilWardLevelTyoor", "Council Ward",  "Tyoor"),
+                ("LGALineageLevelMueTer", "LGA Lineage",   "Mue Ter"),
+                ("LGALevelTer",           "LGA Level",     "Ter")
+            };
+            foreach (var (prop, level, title) in authLevels)
+            {
+                var name = F($"Consent.{prop}.Name");
+                var sig  = F($"Consent.{prop}.Signature");
+                if (!string.IsNullOrWhiteSpace(name))
+                    submission.ConsentSignatories.Add(new ConsentSignatory
+                    {
+                        SubmissionId = submission.Id, Role = level, AuthLevel = level,
+                        AuthTitle = title, Name = name, Signature = sig
+                    });
+            }
+
+            await _submissions.SaveAsync(submission);
+
+            if (action == "submit")
+            {
+                if (submission.CommunityId == 0)
+                { TempData["Error"] = "Community selection required."; return RedirectToPage(new { id = submissionId }); }
+
+                await _submissions.SubmitAsync(submissionId);
+                TempData["Success"] = "Questionnaire submitted for coordinator review!";
+                return RedirectToPage("/Agent/MySubmissions");
+            }
+
+            TempData["Success"] = "Draft saved.";
+            return RedirectToPage(new { id = submissionId });
+        }
+
+        // ── Geo dropdown loaders ──────────────────────────────────────
+        private async Task LoadGeoDropdownsAsync()
+        {
+            LGAs = await _db.LGAs.Where(l => l.IsActive).OrderBy(l => l.Name).ToListAsync();
+        }
+
+        // ── Form helpers ─────────────────────────────────────────────
+        private string? F(string key) =>
+            Request.Form.TryGetValue(key, out var v) ? v.ToString().NullIfEmpty() : null;
+
+        private bool ParseBool(string key) =>
+            Request.Form.TryGetValue(key, out var v) && v.ToString() == "true";
+
+        private int? ParseNullInt(string key) =>
+            int.TryParse(F(key), out var i) ? i : null;
+
+        private double? ParseNullDouble(string key) =>
+            double.TryParse(F(key), out var d) ? d : null;
+
+        private bool? ParseNullBool(string key) =>
+            Request.Form.TryGetValue(key, out var v)
+                ? v.ToString() switch { "true" => true, "false" => false, _ => null }
+                : null;
+
+        private T? ParseNullEnum<T>(string key) where T : struct, Enum =>
+            Enum.TryParse<T>(F(key), out var e) ? e : null;
+
+        // ── Collection rebuilder ─────────────────────────────────────
+        private void RebuildCollection<T>(
+            ICollection<T> collection,
+            string prefix,
+            Func<int, Func<string, string?>, T> factory)
+        {
+            for (int i = 0; ; i++)
+            {
+                // Check if any field for this index exists
+                bool any = Request.Form.Keys.Any(k => k.StartsWith($"{prefix}[{i}]."));
+                if (!any) break;
+                Func<string, string?> row = (field) => F($"{prefix}[{i}].{field}");
+                var item = factory(i, row);
+                collection.Add(item);
+            }
+        }
+    }
+
+    // Extension method
+    internal static class StringExt
+    {
+        public static string? NullIfEmpty(this string? s) =>
+            string.IsNullOrWhiteSpace(s) ? null : s;
+    }
+}

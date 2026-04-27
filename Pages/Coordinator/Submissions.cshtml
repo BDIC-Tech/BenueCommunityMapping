@@ -1,0 +1,123 @@
+@page
+@model BenueCommunityMapping.Pages.Coordinator.SubmissionsModel
+@{
+    ViewData["Title"] = "Submissions – Coordinator Review";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-collection"></i></div>
+  <div>
+    <h1>Submissions Review</h1>
+    <p>Review and approve field submissions from your agents</p>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="content-card mb-3">
+  <div class="content-card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="search" class="form-control" value="@Model.Search"
+                 placeholder="Community, LGA, or agent name…" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          @foreach (var s in Enum.GetValues<BenueCommunityMapping.Models.SubmissionStatus>())
+          {
+            <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+          }
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-bsbs-primary btn-sm">Filter</button>
+        <a asp-page="Submissions" class="btn btn-outline-secondary btn-sm ms-1">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-card-header">
+    <i class="bi bi-list-check text-bsbs-green"></i>
+    <h5 class="ms-1">Agent Submissions</h5>
+    <span class="ms-auto text-muted small">@Model.List.TotalItems record(s)</span>
+  </div>
+  @if (!Model.List.Data.Any())
+  {
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <p>No submissions match your filter.</p>
+    </div>
+  }
+  else
+  {
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Community</th><th>LGA</th><th>Ward</th><th>Agent</th>
+            <th>Status</th><th>Submitted</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @{ int i = ((Model.List.PageNumber - 1) * 20) + 1; }
+          @foreach (var s in Model.List.Data)
+          {
+            <tr>
+              <td class="text-muted">@(i++)</td>
+              <td><strong>@s.CommunityName</strong></td>
+              <td>@s.LGA</td>
+              <td class="text-muted">@s.Ward</td>
+              <td>@s.AgentName</td>
+              <td><span class="status-badge status-@s.Status.ToString().ToLower()">@s.Status</span></td>
+              <td class="text-muted small">@(s.SubmittedAt?.ToString("dd MMM yyyy") ?? "–")</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a asp-page="/Questionnaire/View" asp-route-id="@s.Id"
+                     class="btn btn-sm btn-bsbs-outline"><i class="bi bi-eye me-1"></i>View</a>
+
+                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.Submitted)
+                  {
+                    <form method="post" asp-page-handler="Review" asp-route-id="@s.Id">
+                      <button type="submit" class="btn btn-sm btn-bsbs-primary">
+                        <i class="bi bi-check2 me-1"></i>Mark Reviewed
+                      </button>
+                    </form>
+                  }
+                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.Submitted ||
+                       s.Status == BenueCommunityMapping.Models.SubmissionStatus.ReviewedByCoordinator)
+                  {
+                    <form method="post" asp-page-handler="Reject" asp-route-id="@s.Id"
+                          onsubmit="return confirm('Reject this submission?')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i>Reject
+                      </button>
+                    </form>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3 mb-3">
+      <cs-pager cs-paging-pagenumber="@Model.List.PageNumber"
+                cs-paging-totalitems="@Model.List.TotalItems"
+                cs-paging-maxpageritems="10"
+                cs-pagenumber-param="p"
+                asp-page="Submissions"
+                asp-route-search="@Model.Search"
+                cs-pager-ul-class="pagination"
+                asp-route-status="@Model.StatusFilter"
+                cs-pager-li-current-class="page-item active"
+                cs-pager-link-other-class="page-link"
+                cs-pager-link-current-class="page-link"></cs-pager>
+    </div>
+  }
+</div>

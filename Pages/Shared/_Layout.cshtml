@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@ViewData["Title"] – BSBS Community Mapping</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bsbs-navbar px-3 px-lg-4">
+  <a class="navbar-brand d-flex align-items-center gap-2" asp-page="/Index">
+    <span class="brand-seal"><i class="bi bi-shield-fill-check"></i></span>
+    <span class="brand-text">
+      <span class="brand-primary">BSBS</span>
+      <span class="brand-sub d-none d-md-inline">Community Mapping</span>
+    </span>
+  </a>
+
+  <button class="navbar-toggler border-0 text-white" type="button"
+          data-bs-toggle="collapse" data-bs-target="#mainNav">
+    <i class="bi bi-list fs-4"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="mainNav">
+    <ul class="navbar-nav me-auto gap-1">
+
+      <li class="nav-item">
+        <a class="nav-link" asp-page="/Index">
+          <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </a>
+      </li>
+
+      @if (User.IsInRole("Admin"))
+      {
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Admin/Submissions">
+            <i class="bi bi-archive me-1"></i>All Submissions
+          </a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-people me-1"></i>Users
+          </a>
+          <ul class="dropdown-menu shadow-sm border-0">
+            <li><a class="dropdown-item" asp-page="/Admin/Users/Coordinators"><i class="bi bi-person-gear me-2"></i>Coordinators</a></li>
+            <li><a class="dropdown-item" asp-page="/Admin/Users/Agents"><i class="bi bi-person-badge me-2"></i>Field Agents</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" asp-page="/Admin/Geography/Index"><i class="bi bi-diagram-3-fill me-2"></i>Geographic Hierarchy</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" asp-page="/Admin/Users/Create"><i class="bi bi-person-plus me-2"></i>Add User</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Admin/Analytics/Index">
+            <i class="bi bi-bar-chart-line me-1"></i>Analytics
+          </a>
+        </li>
+      }
+
+      @if (User.IsInRole("Admin") || User.IsInRole("Coordinator"))
+      {
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Coordinator/Submissions">
+            <i class="bi bi-collection me-1"></i>Submissions
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/DataAnalysis/Index">
+            <i class="bi bi-bar-chart-steps me-1"></i>Data Analysis
+          </a>
+        </li>
+      }
+
+      @if (User.IsInRole("Coordinator"))
+      {
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Coordinator/Agents">
+            <i class="bi bi-people me-1"></i>My Agents
+          </a>
+        </li>
+      }
+
+      @if (User.IsInRole("Agent"))
+      {
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Agent/MySubmissions">
+            <i class="bi bi-journal-text me-1"></i>My Submissions
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" asp-page="/Questionnaire/Create">
+            <i class="bi bi-plus-circle me-1"></i>New Entry
+          </a>
+        </li>
+      }
+
+    </ul>
+
+    <ul class="navbar-nav ms-auto align-items-center gap-2">
+      @if (User.Identity?.IsAuthenticated == true)
+      {
+        var userRole = User.Claims.FirstOrDefault(
+            c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+        <li class="nav-item">
+          <span class="role-badge role-@userRole.ToLower()">@userRole</span>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+             href="#" data-bs-toggle="dropdown">
+            <span class="user-avatar"><i class="bi bi-person-fill"></i></span>
+            <span class="d-none d-lg-inline">@User.Identity.Name</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li><a class="dropdown-item" asp-page="/Account/Profile"><i class="bi bi-person-circle me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" asp-page="/Account/ChangePassword"><i class="bi bi-key me-2"></i>Change Password</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <form method="post" asp-page="/Account/Logout">
+                <button type="submit" class="dropdown-item text-danger">
+                  <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </li>
+      }
+    </ul>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 mt-3">
+  @if (TempData["Success"] is string success)
+  {
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-check-circle-fill"></i><span>@success</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  }
+  @if (TempData["Error"] is string error)
+  {
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i><span>@error</span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  }
+</div>
+
+<main class="container-fluid px-4 pb-5">
+  @RenderBody()
+</main>
+
+<footer class="bsbs-footer">
+  <span>© @DateTime.Now.Year Benue State Bureau of Statistics &mdash; Community Mapping System</span>
+  <span class="ms-3 text-muted" style="font-size:0.75rem">v1.0.0</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

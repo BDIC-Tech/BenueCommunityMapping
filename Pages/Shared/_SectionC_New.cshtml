@@ -1,0 +1,114 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <label class="form-label">Functional Ambulance / Referral?</label>
+    <select name="SectionC.FunctionalAmbulanceOrReferral" class="form-select">
+      <option value="false" selected="@(!Model.FunctionalAmbulanceOrReferral)">No</option>
+      <option value="true"  selected="@(Model.FunctionalAmbulanceOrReferral)">Yes</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Women Died in Childbirth (last 2 years)?</label>
+    <select name="SectionC.WomenDiedDuringChildbirthLast2Years" class="form-select">
+      <option value="false" selected="@(!Model.WomenDiedDuringChildbirthLast2Years)">No</option>
+      <option value="true"  selected="@(Model.WomenDiedDuringChildbirthLast2Years)">Yes</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Pregnant Women Can Access Emergency Transport at Night?</label>
+    <select name="SectionC.PregnantWomenCanAccessEmergencyTransportAtNight" class="form-select">
+      <option value="false" selected="@(!Model.PregnantWomenCanAccessEmergencyTransportAtNight)">No</option>
+      <option value="true"  selected="@(Model.PregnantWomenCanAccessEmergencyTransportAtNight)">Yes</option>
+    </select>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Major Diseases Commonly Reported</label>
+    <input name="SectionC.MajorDiseasesReported" class="form-control"
+           value="@Model.MajorDiseasesReported" placeholder="e.g. Malaria, Typhoid, Cholera" />
+  </div>
+  <div class="col-12">
+    <label class="form-label">Nearest Health Facility (if none in community)</label>
+    <input name="SectionC.NearestHealthFacilityIfNoneInCommunity" class="form-control"
+           value="@Model.NearestHealthFacilityIfNone" placeholder="Distance and name" />
+  </div>
+</div>
+
+<p class="section-divider">Health Facilities</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead><tr>
+      <th>Name</th><th>Location</th><th>Type</th><th>Distance</th><th>Staff</th>
+      <th>Infrastructure</th><th>Service</th><th>Built By</th><th>Est. Year</th>
+      <th>Renovated</th><th>IDPs Access?</th><th>Essential Drugs</th><th></th>
+    </tr></thead>
+    <tbody id="healthBody">
+      @{ int hi = 0; }
+      @foreach (var f in Model.HealthFacilities)
+      {
+        <tr>
+          <td><input name="SectionC.HealthFacilities[@hi].Name" value="@f.Name" /></td>
+          <td><input name="SectionC.HealthFacilities[@hi].Location" value="@f.Location" /></td>
+          <td><select name="SectionC.HealthFacilities[@hi].Type">
+            <option value="">–</option>
+            @foreach (var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.HealthFacilityType>())
+            { <option value="@t" selected="@(f.Type == t)">@t.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].DistanceFromCentre">
+            <option value="">–</option>
+            @foreach (var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>())
+            { <option value="@d" selected="@(f.DistanceFromCentre == d)">@d.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].HealthcareStaffAvailability">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>())
+            { <option value="@v" selected="@(f.HealthcareStaffAvailability == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].InfrastructureCondition">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>())
+            { <option value="@v" selected="@(f.InfrastructureCondition == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].ServiceDeliveryCondition">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>())
+            { <option value="@v" selected="@(f.ServiceDeliveryCondition == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><input name="SectionC.HealthFacilities[@hi].WhoBuilt" value="@f.WhoBuilt" placeholder="Builder" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearEstablished" value="@f.YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearLastRenovated" value="@f.YearLastRenovated" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><select name="SectionC.HealthFacilities[@hi].IDPsAllowedWithoutDiscrimination">
+            <option value="">–</option><option value="true" selected="@(f.IDPsAllowedWithoutDiscrimination == true)">Yes</option><option value="false" selected="@(f.IDPsAllowedWithoutDiscrimination == false)">No</option>
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].EssentialDrugsAvailability">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrugAvailability>())
+            { <option value="@v" selected="@(f.EssentialDrugsAvailability == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        hi++;
+      }
+      @if (!Model.HealthFacilities.Any())
+      {
+        <tr>
+          <td><input name="SectionC.HealthFacilities[0].Name" /></td>
+          <td><input name="SectionC.HealthFacilities[0].Location" /></td>
+          <td><select name="SectionC.HealthFacilities[0].Type"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.HealthFacilityType>()){<option value="@t">@t.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].DistanceFromCentre"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d">@d.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].HealthcareStaffAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].ServiceDeliveryCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionC.HealthFacilities[0].WhoBuilt" placeholder="Builder" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[0].YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[0].YearLastRenovated" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><select name="SectionC.HealthFacilities[0].IDPsAllowedWithoutDiscrimination"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><select name="SectionC.HealthFacilities[0].EssentialDrugsAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrugAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('healthBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Health Facility
+</button>

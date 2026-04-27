@@ -1,0 +1,161 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseJ">
+      <i class="bi bi-shield me-2 text-bsbs-green"></i>Section J: Security &amp; Social Protection
+    </button>
+  </h2>
+  <div id="collapseJ" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3">
+          <small class="text-muted d-block">General Security</small>
+          <span class="badge @(Model.GeneralSecuritySituation == BenueCommunityMapping.Models.Survey.SecuritySituation.Safe ? "bg-success" : Model.GeneralSecuritySituation == BenueCommunityMapping.Models.Survey.SecuritySituation.FairlySafe ? "bg-warning text-dark" : "bg-danger")">
+            @(Model.GeneralSecuritySituation?.ToString() ?? "–")
+          </span>
+        </div>
+        <div class="col-md-3"><small class="text-muted d-block">Members Fled?</small><strong>@(Model.MembersHadToSleepInBushOrFlee ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">GBV Due to Displacement?</small><strong>@(Model.WomenAndGirlsExposedToGBV ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Est. IDPs Outside Camps</small><strong>@(Model.EstimatedIDPsOutsideCamps?.ToString() ?? "–")</strong></div>
+        <div class="col-md-6"><small class="text-muted d-block">Most Common Dispute Resolution</small><strong>@(Model.MostCommonDisputeResolution?.ToString() ?? "–")</strong></div>
+        <div class="col-md-6"><small class="text-muted d-block">How Community Resolves Disputes</small><span>@(Model.HowCommunityResolvesDisputes ?? "–")</span></div>
+      </div>
+      @if (Model.SecurityServices.Any(s => s.NumberFrequentlyAvailable > 0))
+      {
+        <p class="section-divider">Security Services</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Type</th><th>No. Available</th><th>Post Type</th><th>Perception</th><th>Permanently Stationed?</th><th>Avg Response</th></tr></thead>
+            <tbody>
+              @foreach (var ss in Model.SecurityServices.Where(s => s.NumberFrequentlyAvailable > 0))
+              {
+                <tr>
+                  <td>@ss.Type</td>
+                  <td>@(ss.NumberFrequentlyAvailable?.ToString() ?? "–")</td>
+                  <td>@(ss.SecurityPostType?.ToString() ?? "–")</td>
+                  <td>@(ss.CommunityPerception?.ToString() ?? "–")</td>
+                  <td>@(ss.PermanentlyStationed.HasValue ? (ss.PermanentlyStationed.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(ss.AverageResponseTime?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.SecurityIncidents.Any())
+      {
+        <p class="section-divider">Past Security Incidents</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Incident</th><th>Cause</th><th>Year</th><th>Still Impacting?</th><th>Help Needed</th></tr></thead>
+            <tbody>
+              @foreach (var inc in Model.SecurityIncidents)
+              {
+                <tr>
+                  <td>@(inc.Incident ?? "–")</td><td>@(inc.Cause ?? "–")</td>
+                  <td>@(inc.YearOccurred?.ToString() ?? "–")</td>
+                  <td>@(inc.StillImpactingCommunity.HasValue ? (inc.StillImpactingCommunity.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(inc.HelpNeeded ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.IDPCamps.Any())
+      {
+        <p class="section-divider">IDP Camps</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Camp Name</th><th>Location</th><th>HHs</th><th>Living Conditions</th><th>GBV in Camp?</th><th>Host Relationship</th></tr></thead>
+            <tbody>
+              @foreach (var camp in Model.IDPCamps)
+              {
+                <tr>
+                  <td>@(camp.Name ?? "–")</td><td>@(camp.Location ?? "–")</td>
+                  <td>@(camp.NumberOfIDPHouseholds?.ToString() ?? "–")</td>
+                  <td>@(camp.LivingConditions?.ToString() ?? "–")</td>
+                  <td>@(camp.WomenAndGirlsExposedToGBV.HasValue ? (camp.WomenAndGirlsExposedToGBV.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(camp.RelationshipWithHostCommunity?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.VulnerableGroups.Any(v => v.NumberOfPeople > 0))
+      {
+        <p class="section-divider">Vulnerable Groups</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Type</th><th>No. of People</th><th>Has Access to Services?</th><th>Community Needs More Support?</th></tr></thead>
+            <tbody>
+              @foreach (var v in Model.VulnerableGroups.Where(x => x.NumberOfPeople > 0))
+              {
+                <tr>
+                  <td>@v.Type</td>
+                  <td>@(v.NumberOfPeople?.ToString("N0") ?? "–")</td>
+                  <td>@(v.HasAccessToSpecialServices.HasValue ? (v.HasAccessToSpecialServices.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(v.CommunityNeedsMoreSupport.HasValue ? (v.CommunityNeedsMoreSupport.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.MigrantSettlerActivities.Any())
+      {
+        <p class="section-divider">Migrant/Settler Activities</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Business Type</th><th>Services Offered</th><th>Year Commenced</th><th>Location</th><th>Indigenes Employed</th><th>Benefiting?</th></tr></thead>
+            <tbody>
+              @foreach (var m in Model.MigrantSettlerActivities)
+              {
+                <tr>
+                  <td>@(m.BusinessOrDevelopmentType ?? "–")</td><td>@(m.ServicesOffered ?? "–")</td>
+                  <td>@(m.YearCommenced?.ToString() ?? "–")</td>
+                  <td>@(m.Location ?? "–")</td>
+                  <td>@(m.NumberOfIndigenesEmployed?.ToString() ?? "–")</td>
+                  <td>@(m.CommunityBenefiting.HasValue ? (m.CommunityBenefiting.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <p class="section-divider">Main Source of Electricity</p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        @if(Model.ElecSourcePublicPower) { <span class="badge bg-primary">Public Power</span> }
+        @if(Model.ElecSourceGenerators) { <span class="badge bg-primary">Generators</span> }
+        @if(Model.ElecSourceSolarPower) { <span class="badge bg-primary">Solar Power</span> }
+        @if(Model.ElecSourceOther) { <span class="badge bg-secondary">Other: @Model.ElecSourceOtherSpecify</span> }
+        @if(!Model.ElecSourcePublicPower && !Model.ElecSourceGenerators && !Model.ElecSourceSolarPower && !Model.ElecSourceOther) { <span class="text-muted">None specified</span> }
+      </div>
+
+      @if (Model.NGOs.Any())
+      {
+        <p class="section-divider">NGOs Operating in Community</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Services in IDP Camp</th><th>Year Commenced</th><th>Services to Host</th><th>Year Commenced</th><th>Satisfied?</th></tr></thead>
+            <tbody>
+              @foreach (var n in Model.NGOs)
+              {
+                <tr>
+                  <td>@(n.Name ?? "–")</td><td>@(n.ServicesInIDPCamp ?? "–")</td>
+                  <td>@(n.YearCommencedInIDPCamp?.ToString() ?? "–")</td>
+                  <td>@(n.ServicesToHostCommunity ?? "–")</td>
+                  <td>@(n.YearCommencedHostCommunity?.ToString() ?? "–")</td>
+                  <td>@(n.CommunityIsSatisfied.HasValue ? (n.CommunityIsSatisfied.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

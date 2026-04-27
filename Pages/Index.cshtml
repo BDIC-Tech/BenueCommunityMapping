@@ -1,0 +1,177 @@
+@page
+@model BenueCommunityMapping.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-speedometer2"></i></div>
+  <div>
+    <h1>Welcome, @Model.UserFullName</h1>
+    <p>@Model.UserRole Dashboard &mdash; Benue Community Mapping System &mdash; @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+  </div>
+</div>
+
+<!-- ── STATS ── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-collection"></i></div>
+      <div>
+        <div class="stat-value">@Model.Stats.TotalSubmissions</div>
+        <div class="stat-label">Total Submissions</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-send"></i></div>
+      <div>
+        <div class="stat-value">@Model.Stats.SubmittedCount</div>
+        <div class="stat-label">Submitted</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon gold"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="stat-value">@Model.Stats.DraftCount</div>
+        <div class="stat-label">Drafts</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="stat-value">@Model.Stats.ApprovedCount</div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+  </div>
+  @if (Model.UserRole != "Agent")
+  {
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="stat-card">
+        <div class="stat-icon purple"><i class="bi bi-people"></i></div>
+        <div>
+          <div class="stat-value">@Model.Stats.TotalAgents</div>
+          <div class="stat-label">@(Model.UserRole == "Admin" ? "Field Agents" : "My Agents")</div>
+        </div>
+      </div>
+    </div>
+  }
+  @if (Model.UserRole == "Admin")
+  {
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="stat-card">
+        <div class="stat-icon gold"><i class="bi bi-person-gear"></i></div>
+        <div>
+          <div class="stat-value">@Model.Stats.TotalCoordinators</div>
+          <div class="stat-label">Coordinators</div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ── QUICK ACTIONS ── -->
+<div class="row g-3 mb-4">
+  @if (User.IsInRole("Agent"))
+  {
+    <div class="col-md-4">
+      <a asp-page="/Questionnaire/Create" class="btn btn-bsbs-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-plus-circle-fill fs-5"></i><span>Start New Questionnaire</span>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a asp-page="/Agent/MySubmissions" class="btn btn-bsbs-outline w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-journal-text fs-5"></i><span>My Submissions</span>
+      </a>
+    </div>
+  }
+  @if (User.IsInRole("Coordinator"))
+  {
+    <div class="col-md-4">
+      <a asp-page="/Coordinator/Submissions" class="btn btn-bsbs-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-collection-fill fs-5"></i><span>Review Submissions</span>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a asp-page="/Coordinator/Agents" class="btn btn-bsbs-outline w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-people-fill fs-5"></i><span>Manage Agents</span>
+      </a>
+    </div>
+  }
+  @if (User.IsInRole("Admin"))
+  {
+    <div class="col-md-3">
+      <a asp-page="/Admin/Submissions" class="btn btn-bsbs-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-archive-fill fs-5"></i><span>All Submissions</span>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a asp-page="/Admin/Users/Coordinators" class="btn btn-bsbs-outline w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-people-fill fs-5"></i><span>Manage Users</span>
+      </a>
+    </div>
+    <div class="col-md-3">
+      <a asp-page="/Admin/Users/Create" class="btn btn-bsbs-gold w-100 py-3 d-flex align-items-center justify-content-center gap-2">
+        <i class="bi bi-person-plus-fill fs-5"></i><span>Add User</span>
+      </a>
+    </div>
+  }
+</div>
+
+<!-- ── RECENT SUBMISSIONS ── -->
+<div class="table-card">
+  <div class="table-card-header">
+    <i class="bi bi-clock-history text-bsbs-green fs-5"></i>
+    <h5>Recent Submissions</h5>
+    <span class="ms-auto badge bg-secondary">@Model.RecentSubmissions.Count entries</span>
+  </div>
+  @if (!Model.RecentSubmissions.Any())
+  {
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <p>No submissions yet.</p>
+      @if (User.IsInRole("Agent"))
+      {
+        <a asp-page="/Questionnaire/Create" class="btn btn-bsbs-primary btn-sm">Start First Entry</a>
+      }
+    </div>
+  }
+  else
+  {
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead>
+          <tr>
+            <th>Community</th><th>LGA</th>
+            @if (!User.IsInRole("Agent")) { <th>Agent</th> }
+            <th>Status</th><th>Date</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var s in Model.RecentSubmissions)
+          {
+            <tr>
+              <td><strong>@s.CommunityName</strong></td>
+              <td>@s.LGA</td>
+              @if (!User.IsInRole("Agent")) { <td>@s.AgentName</td> }
+              <td><span class="status-badge status-@s.Status.ToString().ToLower()">@s.Status</span></td>
+              <td class="text-muted">@s.CreatedAt.ToString("dd MMM yyyy")</td>
+              <td>
+                <a asp-page="/Questionnaire/View" asp-route-id="@s.Id"
+                   class="btn btn-sm btn-bsbs-outline">
+                  <i class="bi bi-eye me-1"></i>View
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,61 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseI">
+      <i class="bi bi-wifi me-2 text-bsbs-green"></i>Section I: Telecommunications &amp; Information
+    </button>
+  </h2>
+  <div id="collapseI" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-4"><small class="text-muted d-block">Communication Black Spots?</small><strong>@(Model.CommunicationBlackSpotsExist ? "Yes" : "No")</strong></div>
+        <div class="col-md-8">
+          <small class="text-muted d-block">Internet Sources</small>
+          @{ var inet = new List<string>();
+             if(Model.InternetSourceMobileData) inet.Add("Mobile Data");
+             if(Model.InternetSourceBroadbandFibre) inet.Add("Broadband/Fibre");
+             if(Model.InternetSourceSatellite) inet.Add("Satellite");
+          }
+          <span>@(inet.Any() ? string.Join(", ", inet) : "–")</span>
+        </div>
+        <div class="col-12">
+          <small class="text-muted d-block">Information Channels</small>
+          @{ var ch = new List<string>();
+             if(Model.InfoChannelPhoneCallsSMS) ch.Add("Phone/SMS");
+             if(Model.InfoChannelTelevision) ch.Add("TV");
+             if(Model.InfoChannelRadio) ch.Add("Radio");
+             if(Model.InfoChannelTownCrier) ch.Add("Town Crier");
+             if(Model.InfoChannelReligiousCentres) ch.Add("Religious Centres");
+             if(Model.InfoChannelCommunityMeetings) ch.Add("Community Meetings");
+             if(Model.InfoChannelSocialMedia) ch.Add("Social Media");
+          }
+          <span>@(ch.Any() ? string.Join(", ", ch) : "–")</span>
+        </div>
+        <div class="col-12"><small class="text-muted">Telecom Challenges:</small> @(Model.TelecommunicationChallenges ?? "–")</div>
+      </div>
+      @if (Model.GSMNetworks.Any())
+      {
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Provider</th><th>Coverage</th><th>Availability</th><th>Call/SMS Quality</th><th>Internet</th><th>Network Type</th></tr></thead>
+            <tbody>
+              @foreach (var n in Model.GSMNetworks)
+              {
+                <tr>
+                  <td><strong>@n.Provider</strong></td>
+                  <td>@(n.CoverageStrength?.ToString() ?? "–")</td>
+                  <td>@(n.AvailabilityArea?.ToString() ?? "–")</td>
+                  <td>@(n.CallAndSMSQuality?.ToString() ?? "–")</td>
+                  <td>@(n.InternetQuality?.ToString() ?? "–")</td>
+                  <td>@(n.NetworkType?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No GSM network data recorded.</p> }
+    </div>
+  </div>
+</div>

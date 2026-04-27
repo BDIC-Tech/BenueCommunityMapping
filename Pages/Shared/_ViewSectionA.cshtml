@@ -1,0 +1,65 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+@{
+    var c = Model.Community;
+    var k = c?.Kindred;
+    var w = k?.Ward;
+    var l = w?.LocalGovernmentArea;
+}
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseA">
+      <i class="bi bi-geo-alt-fill me-2 text-bsbs-green"></i>Section A: Community Identification
+    </button>
+  </h2>
+  <div id="collapseA" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2">
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Community</small>
+          <strong>@(c?.Name ?? "–")</strong>
+          @if (!string.IsNullOrEmpty(c?.Code)) { <code class="ms-1 text-muted">@c.Code</code> }
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Kindred</small>
+          <strong>@(k?.Name ?? "–")</strong>
+          @if (!string.IsNullOrEmpty(k?.Code)) { <code class="ms-1 text-muted">@k.Code</code> }
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Ward</small>
+          <strong>@(w?.Name ?? "–")</strong>
+          @if (!string.IsNullOrEmpty(w?.Code)) { <code class="ms-1 text-muted">@w.Code</code> }
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Local Government Area</small>
+          <strong>@(l?.Name ?? "–")</strong>
+          @if (!string.IsNullOrEmpty(l?.Code)) { <code class="ms-1 text-muted">@l.Code</code> }
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Est. Households</small>
+          <strong>@(Model.EstimatedNumberOfHouseholds?.ToString() ?? "–")</strong>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Major Ethnic Groups</small>
+          <span>@(c?.MajorEthnicGroups ?? "–")</span>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Farmer–Herder Conflict?</small>
+          <span class="badge @(Model.AffectedByFarmerHerderConflict ? "bg-danger" : "bg-success")">
+            @(Model.AffectedByFarmerHerderConflict ? $"Yes (since {Model.ConflictStartYear})" : "No")
+          </span>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <small class="text-muted d-block">Host to IDPs?</small>
+          <span class="badge @(Model.IsHostCommunityToIDPs ? "bg-warning text-dark" : "bg-secondary")">
+            @(Model.IsHostCommunityToIDPs ? $"Yes ({Model.IDPHouseholdsOutsideCamps} HHs outside camps)" : "No")
+          </span>
+        </div>
+        <div class="col-12">
+          <small class="text-muted d-block">Major Family Lineages</small>
+          <span>@(Model.MajorFamilyLineages ?? "–")</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

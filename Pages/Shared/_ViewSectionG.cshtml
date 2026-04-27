@@ -1,0 +1,70 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseG">
+      <i class="bi bi-tree me-2 text-bsbs-green"></i>Section G: Environment &amp; Agriculture
+    </button>
+  </h2>
+  <div id="collapseG" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3"><small class="text-muted d-block">General Environment</small><strong>@(Model.GeneralEnvironmentalCondition?.ToString() ?? "–")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Farmland Inaccessible?</small><strong>@(Model.FarmlandInaccessibleDueToInsecurity ? $"Yes ({Model.PercentFarmlandAbandoned})" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Irrigation Present?</small><strong>@(Model.IrrigationSystemsPresent ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Extension Workers</small><strong>@(Model.NumberOfAgriculturalExtensionWorkers?.ToString() ?? "–")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Land Disputes (IDPs)?</small><strong>@(Model.LandDisputesBetweenIndigenesAndIDPs ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Tractors / Mechanised?</small><strong>@(Model.AccessToTractorsOrMechanizedFarming ? "Yes" : "No")</strong></div>
+        <div class="col-md-6">
+          <small class="text-muted d-block">Water Sources</small>
+          @{ var water = new List<string>();
+             if(Model.WaterSourceRiverStream) water.Add("River/Stream");
+             if(Model.WaterSourceBorehole) water.Add("Borehole");
+             if(Model.WaterSourceWell) water.Add("Well");
+             if(Model.WaterSourceRainwater) water.Add("Rainwater");
+             if(Model.WaterSourcePipeBorne) water.Add("Pipe-borne");
+          }
+          <span>@(water.Any() ? string.Join(", ", water) : "–")</span>
+        </div>
+        <div class="col-12"><small class="text-muted">Natural Features Challenges:</small> @(Model.NaturalFeaturesChallenges ?? "–")</div>
+      </div>
+      @if (Model.EnvironmentalChallenges.Any())
+      {
+        <p class="section-divider">Environmental Challenges</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Challenge</th><th>Frequency</th><th>Severity</th><th>Year Started</th><th>Interventions?</th><th>Helped?</th></tr></thead>
+            <tbody>
+              @foreach (var c in Model.EnvironmentalChallenges.Where(e => e.Frequency != null && e.Frequency != BenueCommunityMapping.Models.Survey.OccurrenceFrequency.None))
+              {
+                <tr>
+                  <td><strong>@c.ChallengeType</strong></td>
+                  <td>@(c.Frequency?.ToString() ?? "–")</td>
+                  <td>@(c.Severity?.ToString() ?? "–")</td>
+                  <td>@(c.YearStarted?.ToString() ?? "–")</td>
+                  <td>@(c.InterventionsCarriedOut.HasValue ? (c.InterventionsCarriedOut.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(c.InterventionsHelped.HasValue ? (c.InterventionsHelped.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.NaturalFeatures.Any())
+      {
+        <p class="section-divider">Natural Features</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Community Use</th></tr></thead>
+            <tbody>
+              @foreach (var n in Model.NaturalFeatures)
+              {
+                <tr><td>@(n.Name ?? "–")</td><td>@(n.Type?.ToString() ?? "–")</td><td>@(n.Location ?? "–")</td><td>@(n.CommunityUse ?? "–")</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+</div>

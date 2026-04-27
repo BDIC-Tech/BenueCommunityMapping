@@ -1,0 +1,55 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="row g-3 mb-3">
+  <div class="col-md-6"><label class="form-label">Relies More on Informal Savings (Adashi)?</label>
+    <select name="SectionF.RelyMoreOnInformalSavingsGroups" class="form-select">
+      <option value="false" selected="@(!Model.RelyMoreOnInformalSavingsGroups)">No</option>
+      <option value="true"  selected="@(Model.RelyMoreOnInformalSavingsGroups)">Yes</option>
+    </select></div>
+  <div class="col-md-6"><label class="form-label">Members Lost Money to Failed POS / Fraud?</label>
+    <select name="SectionF.MembersLostMoneyToFailedPOSOrFraud" class="form-select">
+      <option value="false" selected="@(!Model.MembersLostMoneyToFailedPOSOrFraud)">No</option>
+      <option value="true"  selected="@(Model.MembersLostMoneyToFailedPOSOrFraud)">Yes</option>
+    </select></div>
+  <div class="col-12"><label class="form-label">Major Challenges</label>
+    <textarea name="SectionF.MajorChallenges" class="form-control" rows="2">@Model.FinancialServicesChallenges</textarea></div>
+</div>
+<p class="section-divider">Financial Services</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table"><thead><tr>
+    <th>Institution/Service</th><th>Location</th><th>Type</th><th>Offers Loans?</th>
+    <th>Distance</th><th>Beneficial?</th><th>Women/Youth Equal Access?</th><th></th>
+  </tr></thead>
+  <tbody id="financeBody">
+    @{ int fi = 0; }
+    @foreach (var f in Model.FinancialServices)
+    {
+      <tr>
+        <td><input name="SectionF.FinancialServices[@fi].Name" value="@f.Name"/></td>
+        <td><input name="SectionF.FinancialServices[@fi].Location" value="@f.Location"/></td>
+        <td><select name="SectionF.FinancialServices[@fi].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.FinancialServiceType>()){<option value="@v" selected="@(f.Type==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionF.FinancialServices[@fi].OffersLoansOrCredit"><option value="">–</option><option value="true" selected="@(f.OffersLoansOrCredit==true)">Yes</option><option value="false" selected="@(f.OffersLoansOrCredit==false)">No</option></select></td>
+        <td><select name="SectionF.FinancialServices[@fi].DistanceFromCentre"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@v" selected="@(f.DistanceFromCentre==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionF.FinancialServices[@fi].CommunityFindsBeneficial"><option value="">–</option><option value="true" selected="@(f.CommunityFindsBeneficial==true)">Yes</option><option value="false" selected="@(f.CommunityFindsBeneficial==false)">No</option></select></td>
+        <td><select name="SectionF.FinancialServices[@fi].WomenAndYouthHaveEqualAccess"><option value="">–</option><option value="true" selected="@(f.WomenAndYouthHaveEqualAccess==true)">Yes</option><option value="false" selected="@(f.WomenAndYouthHaveEqualAccess==false)">No</option></select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+      fi++;
+    }
+    @if (!Model.FinancialServices.Any())
+    {
+      <tr>
+        <td><input name="SectionF.FinancialServices[0].Name"/></td>
+        <td><input name="SectionF.FinancialServices[0].Location"/></td>
+        <td><select name="SectionF.FinancialServices[0].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.FinancialServiceType>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionF.FinancialServices[0].OffersLoansOrCredit"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+        <td><select name="SectionF.FinancialServices[0].DistanceFromCentre"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionF.FinancialServices[0].CommunityFindsBeneficial"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+        <td><select name="SectionF.FinancialServices[0].WomenAndYouthHaveEqualAccess"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+    }
+  </tbody></table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('financeBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Financial Service
+</button>

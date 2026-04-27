@@ -1,0 +1,128 @@
+@page
+@model BenueCommunityMapping.Pages.Admin.SubmissionsModel
+@{
+    ViewData["Title"] = "All Submissions – Admin";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-archive"></i></div>
+  <div>
+    <h1>All Submissions</h1>
+    <p>System-wide view of every community mapping questionnaire</p>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="content-card mb-3">
+  <div class="content-card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="search" class="form-control" value="@Model.Search"
+                 placeholder="Community, LGA, agent name…" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          @foreach (var s in Enum.GetValues<BenueCommunityMapping.Models.SubmissionStatus>())
+          {
+            <option value="@s" selected="@(Model.StatusFilter == s)">@s</option>
+          }
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-bsbs-primary btn-sm"><i class="bi bi-funnel me-1"></i>Filter</button>
+        <a asp-page="Submissions" class="btn btn-outline-secondary btn-sm ms-1">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-card-header">
+    <i class="bi bi-table text-bsbs-green fs-5"></i>
+    <h5 class="ms-1">Submissions</h5>
+    <span class="ms-auto text-muted small">@Model.List.TotalItems record(s)</span>
+  </div>
+  @if (!Model.List.Data.Any())
+  {
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i><p>No submissions found.</p>
+    </div>
+  }
+  else
+  {
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Community</th><th>LGA</th><th>Ward</th><th>Agent</th>
+            <th>Coordinator</th><th>Status</th><th>Submitted</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @{ int i = ((Model.List.PageNumber - 1) * 20) + 1; }
+          @foreach (var s in Model.List.Data)
+          {
+            <tr>
+              <td class="text-muted">@(i++)</td>
+              <td><strong>@s.CommunityName</strong></td>
+              <td>@s.LGA</td>
+              <td class="text-muted">@s.Ward</td>
+              <td>@s.AgentName</td>
+              <td class="text-muted">@(s.CoordinatorName ?? "–")</td>
+              <td><span class="status-badge status-@s.Status.ToString().ToLower()">@s.Status</span></td>
+              <td class="text-muted small">@(s.SubmittedAt?.ToString("dd MMM yyyy") ?? "–")</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a asp-page="/Questionnaire/View" asp-route-id="@s.Id"
+                     class="btn btn-sm btn-bsbs-outline"><i class="bi bi-eye"></i></a>
+
+                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.ReviewedByCoordinator ||
+                       s.Status == BenueCommunityMapping.Models.SubmissionStatus.Submitted)
+                  {
+                    <form method="post" asp-page-handler="Approve" asp-route-id="@s.Id">
+                      <button type="submit" class="btn btn-sm btn-bsbs-primary">
+                        <i class="bi bi-check2-circle me-1"></i>Approve
+                      </button>
+                    </form>
+                    <form method="post" asp-page-handler="Reject" asp-route-id="@s.Id"
+                          onsubmit="return confirm('Reject this submission?')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    </form>
+                  }
+
+                  <form method="post" asp-page-handler="Delete" asp-route-id="@s.Id"
+                        onsubmit="return confirm('Permanently delete this submission?')">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+
+    <div class="d-flex justify-content-end mt-3 mb-3">
+      <cs-pager cs-paging-pagenumber="@Model.List.PageNumber"
+                cs-paging-totalitems="@Model.List.TotalItems"
+                cs-paging-maxpageritems="10"
+                cs-pagenumber-param="p"
+                asp-page="Submissions"
+                asp-route-search="@Model.Search"
+                cs-pager-ul-class="pagination"
+                asp-route-status="@Model.StatusFilter"
+                cs-pager-li-current-class="page-item active"
+                cs-pager-link-other-class="page-link"
+                cs-pager-link-current-class="page-link">></cs-pager>
+    </div>
+  }
+</div>

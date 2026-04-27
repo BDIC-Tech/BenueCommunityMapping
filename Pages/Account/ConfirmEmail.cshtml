@@ -1,0 +1,123 @@
+@page
+@model BenueCommunityMapping.Pages.Account.ConfirmEmailModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Email Verification – Benue Community Mapping";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 24px 64px rgba(0,0,0,.30);
+            max-width: 480px; width: 100%;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 36px 40px 28px;
+            text-align: center;
+        }
+        .card-header.success { background: linear-gradient(135deg, #1a6b3c, #0d4a29); }
+        .card-header.error   { background: linear-gradient(135deg, #b91c1c, #7f1d1d); }
+        .card-header .icon {
+            font-size: 52px; display: block; margin-bottom: 14px;
+        }
+        .card-header h1 {
+            color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -.3px;
+        }
+        .badge {
+            display: inline-block; margin-top: 10px; padding: 4px 14px;
+            background: rgba(255,255,255,.20); border-radius: 20px;
+            color: #fff; font-size: 11px; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        .card-body { padding: 32px 40px 36px; text-align: center; }
+        .card-body p {
+            color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 12px;
+        }
+        .card-body p.muted { color: #6b7280; font-size: 13px; }
+        .btn {
+            display: inline-block; margin-top: 24px; padding: 13px 36px;
+            border-radius: 8px; font-size: 15px; font-weight: 700;
+            text-decoration: none; transition: opacity .2s;
+        }
+        .btn:hover { opacity: .88; }
+        .btn-green  { background: linear-gradient(135deg,#1a6b3c,#0d4a29); color: #fff; }
+        .btn-red    { background: linear-gradient(135deg,#b91c1c,#7f1d1d); color: #fff; }
+        .divider { height: 4px; background: linear-gradient(90deg,#1a6b3c,#f59e0b,#1e40af); }
+        .footer {
+            padding: 16px 40px; background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 12px; color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+  <div class="card">
+
+    @if (Model.IsSuccess)
+    {
+        <div class="card-header success">
+            <span class="icon">✅</span>
+            <h1>Email Verified!</h1>
+            <span class="badge">Account Activated</span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-body">
+            <p>
+                Your account has been successfully verified. You can now sign in
+                to the <strong>Benue Community Mapping System</strong>.
+            </p>
+            <p class="muted">
+                Please use the credentials created by your administrator to log in.
+            </p>
+            <a href="/Account/Login" class="btn btn-green">&#128274;&nbsp; Proceed to Login</a>
+        </div>
+    }
+    else
+    {
+        <div class="card-header error">
+            <span class="icon">&#10060;</span>
+            <h1>Verification Failed</h1>
+            <span class="badge">Invalid or Expired Link</span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-body">
+            <p>
+                We could not verify your email address. The link may have
+                <strong>expired</strong> or is invalid.
+            </p>
+            <p class="muted">
+                Please contact your system administrator to resend a
+                new verification link.
+            </p>
+            @if (!string.IsNullOrEmpty(Model.ErrorDetail))
+            {
+                <p class="muted" style="margin-top:8px;font-size:12px;color:#ef4444;">
+                    @Model.ErrorDetail
+                </p>
+            }
+            <a href="/Account/Login" class="btn btn-red">&#8592;&nbsp; Back to Login</a>
+        </div>
+    }
+
+    <div class="footer">
+        Benue Community Mapping System &mdash; Benue State Bureau of Statistics
+    </div>
+  </div>
+</body>
+</html>

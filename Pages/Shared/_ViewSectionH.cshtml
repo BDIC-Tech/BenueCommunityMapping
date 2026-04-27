@@ -1,0 +1,38 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseH">
+      <i class="bi bi-people me-2 text-bsbs-green"></i>Section H: Religion
+    </button>
+  </h2>
+  <div id="collapseH" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="mb-2">
+        <small class="text-muted">Ethnic/Religious Tensions Caused Conflict?</small>
+        <strong class="ms-2">@(Model.ReligiousOrEthnicTensionsCausedConflict ? "Yes" : "No")</strong>
+      </div>
+      @if (Model.ReligiousGroups.Any())
+      {
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Type</th><th>No. Existing</th><th>Est. Members</th><th>Leaders in Peacebuilding?</th><th>No Longer in Use</th></tr></thead>
+            <tbody>
+              @foreach (var g in Model.ReligiousGroups)
+              {
+                <tr>
+                  <td>@g.Type</td>
+                  <td>@(g.NumberExisting?.ToString() ?? "–")</td>
+                  <td>@(g.EstimatedMembershipPopulation?.ToString("N0") ?? "–")</td>
+                  <td>@(g.LeadersActivelyParticipateInPeaceBuilding.HasValue ? (g.LeadersActivelyParticipateInPeaceBuilding.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(g.NumberNoLongerInUseOrDestroyed?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No religious group data recorded.</p> }
+    </div>
+  </div>
+</div>

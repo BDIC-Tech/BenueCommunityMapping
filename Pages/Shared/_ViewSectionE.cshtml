@@ -1,0 +1,62 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseE">
+      <i class="bi bi-signpost-split me-2 text-bsbs-green"></i>Section E: Access Roads &amp; Transportation
+    </button>
+  </h2>
+  <div id="collapseE" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-4"><small class="text-muted d-block">Main Road Type</small><strong>@(Model.MainAccessRoadType?.ToString() ?? "–")</strong></div>
+        <div class="col-md-8"><small class="text-muted d-block">Transport Challenges</small><span>@(Model.TransportChallenges ?? "–")</span></div>
+        <div class="col-md-6">
+          <small class="text-muted d-block">Rainy Season Transport</small>
+          @{ var rainModes = new List<string>();
+             if(Model.RainSeasonMotorcycle) rainModes.Add("Motorcycle");
+             if(Model.RainSeasonCarBus) rainModes.Add("Car/Bus");
+             if(Model.RainSeasonTruck) rainModes.Add("Truck");
+             if(Model.RainSeasonWalking) rainModes.Add("Walking");
+             if(Model.RainSeasonCanoeBoat) rainModes.Add("Canoe/Boat");
+          }
+          <span>@(rainModes.Any() ? string.Join(", ", rainModes) : "–")</span>
+        </div>
+        <div class="col-md-6">
+          <small class="text-muted d-block">Dry Season Transport</small>
+          @{ var dryModes = new List<string>();
+             if(Model.DrySeasonMotorcycle) dryModes.Add("Motorcycle");
+             if(Model.DrySeasonCarBus) dryModes.Add("Car/Bus");
+             if(Model.DrySeasonTruck) dryModes.Add("Truck");
+             if(Model.DrySeasonWalking) dryModes.Add("Walking");
+             if(Model.DrySeasonCanoeBoat) dryModes.Add("Canoe/Boat");
+          }
+          <span>@(dryModes.Any() ? string.Join(", ", dryModes) : "–")</span>
+        </div>
+      </div>
+      @if (Model.AccessRoads.Any())
+      {
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Road</th><th>Rainy</th><th>Dry</th><th>Drainage</th><th>Work Quality</th><th>Months Difficult</th><th>Dangers</th></tr></thead>
+            <tbody>
+              @foreach (var r in Model.AccessRoads)
+              {
+                <tr>
+                  <td>@(r.RoadName ?? "–")</td>
+                  <td>@(r.RainySeasonCondition?.ToString() ?? "–")</td>
+                  <td>@(r.DrySeasonCondition?.ToString() ?? "–")</td>
+                  <td>@(r.DrainageSystem?.ToString() ?? "–")</td>
+                  <td>@(r.InfrastructureWorkQuality?.ToString() ?? "–")</td>
+                  <td>@(r.MonthsAccessVeryDifficult?.ToString() ?? "–")</td>
+                  <td>@(r.DangersFromBadAccess?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No roads recorded.</p> }
+    </div>
+  </div>
+</div>

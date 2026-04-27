@@ -1,0 +1,38 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="info-note mb-3">
+  <i class="bi bi-lightbulb-fill me-1"></i>
+  Rank from most urgent (#1) to least urgent (#5). Priority 1 is the single change that would transform your community the most.
+</div>
+@{
+  var existingNeeds = Model.PriorityNeeds.OrderBy(p => p.Rank).ToDictionary(p => p.Rank, p => p.Description);
+  var priorities = new[] {
+    (1, "p1", "If the government fixes ONE thing, what should it be?", true),
+    (2, "p2", "Second most urgent need…", false),
+    (3, "p3", "Third most urgent need…", false),
+    (4, "p4", "Fourth most urgent need…", false),
+    (5, "p5", "Fifth most urgent need…",  false)
+  };
+}
+@foreach (var (rank, cls, placeholder, required) in priorities)
+{
+  <div class="priority-item mb-3">
+    <div class="priority-badge @cls">@rank</div>
+    <div class="flex-fill">
+      <label class="form-label">
+        Priority @rank @if (required) { <span class="required-star">*</span> }
+      </label>
+      @if (required)
+      {
+        <input name="SectionK.PriorityNeed@(rank)" class="form-control"
+               value="@(existingNeeds.GetValueOrDefault(rank))"
+               placeholder="@placeholder" required />
+      }
+      else
+      {
+        <input name="SectionK.PriorityNeed@(rank)" class="form-control"
+               value="@(existingNeeds.GetValueOrDefault(rank))"
+               placeholder="@placeholder" />
+      }
+    </div>
+  </div>
+}

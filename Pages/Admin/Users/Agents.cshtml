@@ -1,0 +1,111 @@
+@page
+@model BenueCommunityMapping.Pages.Admin.Users.AgentsModel
+@{
+    ViewData["Title"] = "Field Agents";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-person-badge"></i></div>
+  <div>
+    <h1>Field Agents</h1>
+    <p>All agents registered in the system across all coordinators</p>
+  </div>
+  <a asp-page="Create" asp-route-role="Agent" class="btn btn-bsbs-gold ms-auto">
+    <i class="bi bi-person-plus me-1"></i>Add Agent
+  </a>
+</div>
+
+<!-- SEARCH -->
+<div class="content-card mb-3">
+  <div class="content-card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="search" class="form-control" value="@Model.Search"
+                 placeholder="Agent name or email…" />
+        </div>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-bsbs-primary btn-sm">Search</button>
+        <a asp-page="Agents" class="btn btn-outline-secondary btn-sm ms-1">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-card-header">
+    <i class="bi bi-person-badge text-bsbs-green fs-5"></i>
+    <h5 class="ms-1">Agents</h5>
+    <span class="ms-auto badge bg-secondary">@Model.List.TotalItems</span>
+  </div>
+  @if (!Model.List.Data.Any())
+  {
+    <div class="empty-state">
+      <i class="bi bi-person-x"></i><p>No agents found.</p>
+    </div>
+  }
+  else
+  {
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Email</th><th>LGA</th><th>Ward</th>
+              <th>Coordinator</th><th>Submissions</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          @{ int i = ((Model.List.PageNumber - 1) * 20) + 1; }
+          @foreach (var a in Model.List.Data)
+          {
+            <tr>
+              <td class="text-muted">@(i++)</td>
+              <td><strong>@a.FullName</strong></td>
+              <td class="text-muted">@a.Email</td>
+              <td>@(a.LGA ?? "–")</td>
+              <td>@(a.AssignedWard ?? "–")</td>
+              <td class="text-muted">@(a.CoordinatorName ?? "–")</td>
+              <td><span class="badge bg-secondary rounded-pill">@a.SubmissionCount</span></td>
+              <td>
+                @if (a.IsActive) { <span class="badge bg-success">Active</span> }
+                else             { <span class="badge bg-secondary">Inactive</span> }
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <a asp-page="Edit" asp-route-id="@a.Id"
+                     class="btn btn-sm btn-bsbs-outline"><i class="bi bi-pencil"></i></a>
+
+                  <form method="post" asp-page-handler="Toggle" asp-route-id="@a.Id">
+                    <button type="submit"
+                            class="btn btn-sm @(a.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                            title="@(a.IsActive ? "Deactivate" : "Activate")">
+                      <i class="bi @(a.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                    </button>
+                  </form>
+
+                  <a asp-page="ResetPassword" asp-route-id="@a.Id"
+                     class="btn btn-sm btn-outline-secondary" title="Reset Password">
+                    <i class="bi bi-key"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3 mb-3">
+      <cs-pager cs-paging-pagenumber="@Model.List.PageNumber"
+                cs-paging-totalitems="@Model.List.TotalItems"
+                cs-paging-maxpageritems="10"
+                cs-pagenumber-param="p"
+                asp-page="Agents"
+                asp-route-search="@Model.Search"
+                cs-pager-ul-class="pagination"
+                cs-pager-li-current-class="page-item active"
+                cs-pager-link-other-class="page-link"
+                cs-pager-link-current-class="page-link"></cs-pager>
+    </div>
+  }
+</div>

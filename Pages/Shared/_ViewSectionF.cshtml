@@ -1,0 +1,39 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseF">
+      <i class="bi bi-bank2 me-2 text-bsbs-green"></i>Section F: Financial Services
+    </button>
+  </h2>
+  <div id="collapseF" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-4"><small class="text-muted d-block">Rely on Informal Savings?</small><strong>@(Model.RelyMoreOnInformalSavingsGroups ? "Yes" : "No")</strong></div>
+        <div class="col-md-4"><small class="text-muted d-block">Members Lost Money to Fraud?</small><strong>@(Model.MembersLostMoneyToFailedPOSOrFraud ? "Yes" : "No")</strong></div>
+        <div class="col-12"><small class="text-muted">Major Challenges:</small> @(Model.FinancialServicesChallenges ?? "–")</div>
+      </div>
+      @if (Model.FinancialServices.Any())
+      {
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Institution</th><th>Type</th><th>Offers Loans?</th><th>Distance</th><th>Beneficial?</th><th>Women/Youth Access?</th></tr></thead>
+            <tbody>
+              @foreach (var f in Model.FinancialServices)
+              {
+                <tr>
+                  <td>@(f.Name ?? "–")</td><td>@(f.Type?.ToString() ?? "–")</td>
+                  <td>@(f.OffersLoansOrCredit.HasValue ? (f.OffersLoansOrCredit.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(f.DistanceFromCentre?.ToString() ?? "–")</td>
+                  <td>@(f.CommunityFindsBeneficial.HasValue ? (f.CommunityFindsBeneficial.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(f.WomenAndYouthHaveEqualAccess.HasValue ? (f.WomenAndYouthHaveEqualAccess.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No financial services recorded.</p> }
+    </div>
+  </div>
+</div>

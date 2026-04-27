@@ -1,0 +1,24 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseK">
+      <i class="bi bi-star me-2 text-bsbs-green"></i>Section K: Community Priority Needs
+    </button>
+  </h2>
+  <div id="collapseK" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      @if (Model.PriorityNeeds.Any())
+      {
+        @foreach (var need in Model.PriorityNeeds.OrderBy(p => p.Rank))
+        {
+          <div class="priority-item mb-2">
+            <div class="priority-badge p@(need.Rank)">@need.Rank</div>
+            <div>@need.Description</div>
+          </div>
+        }
+      }
+      else { <p class="text-muted">No priority needs recorded.</p> }
+    </div>
+  </div>
+</div>

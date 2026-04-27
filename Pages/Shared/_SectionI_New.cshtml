@@ -1,0 +1,58 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<p class="section-divider">GSM Network Coverage</p>
+<div class="table-responsive mb-3">
+  <table class="dyn-table"><thead><tr>
+    <th>Provider</th><th>Coverage</th><th>Availability</th>
+    <th>Call/SMS Quality</th><th>Internet Quality</th><th>Network Type</th><th>Affects Emergencies?</th>
+  </tr></thead>
+  <tbody>
+    @{
+      var providers = Enum.GetValues<BenueCommunityMapping.Models.Survey.GSMProvider>();
+      int ii = 0;
+    }
+    @foreach (var prov in providers)
+    {
+      var net = Model.GSMNetworks.FirstOrDefault(n => n.Provider == prov) ??
+                new BenueCommunityMapping.Models.Survey.GSMNetwork { Provider = prov };
+      <tr>
+        <td style="font-weight:600;color:var(--bsbs-green)">
+          <input type="hidden" name="SectionI.GSMNetworks[@ii].Provider" value="@prov"/>@prov
+        </td>
+        <td><select name="SectionI.GSMNetworks[@ii].CoverageStrength"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkCoverage>()){<option value="@v" selected="@(net.CoverageStrength==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].AvailabilityArea"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkAvailability>()){<option value="@v" selected="@(net.AvailabilityArea==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].CallAndSMSQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()){<option value="@v" selected="@(net.CallAndSMSQuality==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].InternetQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()){<option value="@v" selected="@(net.InternetQuality==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].NetworkType"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkGeneration>()){<option value="@v" selected="@(net.NetworkType==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].AffectedSecurityReportingOrEmergencyCalls"><option value="">–</option><option value="true" selected="@(net.AffectedSecurityReportingOrEmergencyCalls==true)">Yes</option><option value="false" selected="@(net.AffectedSecurityReportingOrEmergencyCalls==false)">No</option></select></td>
+      </tr>
+      ii++;
+    }
+  </tbody></table>
+</div>
+<div class="row g-3">
+  <div class="col-md-6"><label class="form-label">Main Internet Sources</label>
+    <div class="d-flex gap-3 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceMobileData"      value="true" checked="@Model.InternetSourceMobileData"      id="iMobile"><label class="form-check-label" for="iMobile">Mobile Data</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceBroadbandFibre"  value="true" checked="@Model.InternetSourceBroadbandFibre"  id="iBroadband"><label class="form-check-label" for="iBroadband">Broadband/Fibre</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceSatellite"       value="true" checked="@Model.InternetSourceSatellite"       id="iSat"><label class="form-check-label" for="iSat">Satellite</label></div>
+    </div>
+  </div>
+  <div class="col-md-6"><label class="form-label">Communication Black Spots?</label>
+    <select name="SectionI.CommunicationBlackSpotsExist" class="form-select">
+      <option value="false" selected="@(!Model.CommunicationBlackSpotsExist)">No</option>
+      <option value="true"  selected="@(Model.CommunicationBlackSpotsExist)">Yes</option>
+    </select></div>
+  <div class="col-12"><label class="form-label">Common Information Channels</label>
+    <div class="d-flex flex-wrap gap-3 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelPhoneCallsSMS"     value="true" checked="@Model.InfoChannelPhoneCallsSMS"     id="chPhone"><label class="form-check-label" for="chPhone">Phone/SMS</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelTelevision"        value="true" checked="@Model.InfoChannelTelevision"        id="chTV"><label class="form-check-label" for="chTV">Television</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelRadio"             value="true" checked="@Model.InfoChannelRadio"             id="chRadio"><label class="form-check-label" for="chRadio">Radio</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelTownCrier"         value="true" checked="@Model.InfoChannelTownCrier"         id="chCrier"><label class="form-check-label" for="chCrier">Town Crier</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelReligiousCentres"  value="true" checked="@Model.InfoChannelReligiousCentres"  id="chRel"><label class="form-check-label" for="chRel">Religious Centres</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelCommunityMeetings" value="true" checked="@Model.InfoChannelCommunityMeetings" id="chMeet"><label class="form-check-label" for="chMeet">Community Meetings</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelSocialMedia"       value="true" checked="@Model.InfoChannelSocialMedia"       id="chSocial"><label class="form-check-label" for="chSocial">Social Media</label></div>
+    </div>
+  </div>
+  <div class="col-12"><label class="form-label">Telecommunication Challenges</label>
+    <textarea name="SectionI.TelecommunicationChallenges" class="form-control" rows="2">@Model.TelecommunicationChallenges</textarea></div>
+</div>

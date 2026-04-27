@@ -1,0 +1,180 @@
+@page "{role?}"
+@model BenueCommunityMapping.Pages.Admin.Users.CreateModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-person-plus"></i></div>
+  <div>
+    <h1>Add New User</h1>
+    <p>Create a new @Model.Input.Role account for the system</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="content-card">
+      <div class="content-card-header">
+        <i class="bi bi-person-fill-add"></i>
+        <h5>User Details</h5>
+      </div>
+      <div class="content-card-body">
+        <form method="post">
+          <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+          <!-- Role -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Role <span class="required-star">*</span></label>
+            <select asp-for="Input.Role" class="form-select" id="roleSelect">
+              <option value="Coordinator">Coordinator</option>
+              <option value="Agent">Field Agent</option>
+              @if (User.IsInRole("Admin")) { <option value="Admin">Admin</option> }
+            </select>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label asp-for="Input.FirstName" class="form-label">First Name <span class="required-star">*</span></label>
+              <input asp-for="Input.FirstName" class="form-control" placeholder="First name" />
+              <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+              <label asp-for="Input.LastName" class="form-label">Last Name <span class="required-star">*</span></label>
+              <input asp-for="Input.LastName" class="form-control" placeholder="Last name" />
+              <span asp-validation-for="Input.LastName" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+              <label asp-for="Input.Email" class="form-label">Email Address <span class="required-star">*</span></label>
+              <input asp-for="Input.Email" class="form-control" placeholder="user@bsbs.gov.ng" type="email" />
+              <span asp-validation-for="Input.Email" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+              <label asp-for="Input.Password" class="form-label">Password <span class="required-star">*</span></label>
+              <input asp-for="Input.Password" class="form-control" type="password" placeholder="Min 8 chars, upper, digit, symbol" />
+              <span asp-validation-for="Input.Password" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+              <label asp-for="Input.LGA" class="form-label">Local Government Area</label>
+              <select asp-for="Input.LGA" class="form-select" id="lgaSelect">
+                <option value="">– Select LGA –</option>
+                @foreach (var lga in Model.LGAs)
+                {
+                  <option value="@lga.Name">@lga.Name</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6" id="wardDiv">
+              <label asp-for="Input.Ward" class="form-label">Assigned Ward</label>
+              <select asp-for="Input.Ward" class="form-select" id="wardSelect" disabled>
+                <option value="">– Select Ward –</option>
+              </select>
+            </div>
+
+            <!-- Coordinator assignment – only for Agents -->
+            <div class="col-12" id="coordDiv">
+              <label asp-for="Input.CoordinatorId" class="form-label">Assign to Coordinator</label>
+              <select asp-for="Input.CoordinatorId" class="form-select"
+                      asp-items="@(new SelectList(Model.Coordinators, "Id", "FullName"))">
+                <option value="">— Select Coordinator —</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-bsbs-primary">
+              <i class="bi bi-person-plus me-1"></i>Create User
+            </button>
+            <a asp-page="Coordinators" class="btn btn-bsbs-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="content-card">
+      <div class="content-card-header">
+        <i class="bi bi-info-circle"></i>
+        <h5>Password Policy</h5>
+      </div>
+      <div class="content-card-body">
+        <ul class="small mb-0" style="color: var(--bsbs-muted)">
+          <li>Minimum 8 characters</li>
+          <li>At least one uppercase letter</li>
+          <li>At least one digit</li>
+          <li>At least one special character (e.g. <code>!@@#$%</code>)</li>
+        </ul>
+        <hr />
+        <div class="info-note">
+          <i class="bi bi-shield-lock me-1"></i>
+          The user will be able to change their password after first login.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+  <script>
+    // ── Role toggle for Coordinator selector & Ward ──
+    function updateRoleVisibility() {
+      const role = document.getElementById('roleSelect').value;
+      document.getElementById('coordDiv').style.display = role === 'Agent' ? 'block' : 'none';
+      document.getElementById('wardDiv').style.display  = role === 'Coordinator' ? 'none' : 'block';
+      // Clear ward value when switching to Coordinator
+      if (role === 'Coordinator') {
+        document.getElementById('wardSelect').value = '';
+      }
+    }
+    document.getElementById('roleSelect').addEventListener('change', updateRoleVisibility);
+    updateRoleVisibility();
+
+    // ── LGA → Ward cascading dropdown ──
+    const lgaMap = { @Html.Raw(string.Join(", ", Model.LGAs.Select(l => $"\"{l.Name}\": {l.Id}"))) };
+
+    document.getElementById('lgaSelect').addEventListener('change', async function () {
+      const wardSel = document.getElementById('wardSelect');
+      wardSel.innerHTML = '<option value="">– Select Ward –</option>';
+      wardSel.disabled = true;
+
+      const lgaId = lgaMap[this.value];
+      if (!lgaId) return;
+
+      try {
+        const res = await fetch(`/api/geo/wards?lgaId=${lgaId}`);
+        if (!res.ok) return;
+        const wards = await res.json();
+        wards.forEach(w => {
+          const opt = new Option(w.name, w.name);
+          wardSel.appendChild(opt);
+        });
+        wardSel.disabled = false;
+      } catch { }
+    });
+
+    // If LGA already has a value on page load (validation redisplay), trigger ward load
+    (async function() {
+      const lgaSel = document.getElementById('lgaSelect');
+      const wardVal = '@(Model.Input.Ward)';
+      if (lgaSel.value) {
+        const lgaId = lgaMap[lgaSel.value];
+        if (!lgaId) return;
+        try {
+          const res = await fetch(`/api/geo/wards?lgaId=${lgaId}`);
+          if (!res.ok) return;
+          const wards = await res.json();
+          const wardSel = document.getElementById('wardSelect');
+          wardSel.innerHTML = '<option value="">– Select Ward –</option>';
+          wards.forEach(w => {
+            const opt = new Option(w.name, w.name);
+            if (w.name === wardVal) opt.selected = true;
+            wardSel.appendChild(opt);
+          });
+          wardSel.disabled = false;
+        } catch { }
+      }
+    })();
+  </script>
+  <partial name="_ValidationScriptsPartial" />
+}

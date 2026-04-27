@@ -1,0 +1,81 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <label class="form-label">Children of School Age NOT in School</label>
+    <input type="number" name="SectionD.NumberOfSchoolAgeChildrenNotInSchool"
+           class="form-control" value="@Model.ChildrenNotInSchool" min="0" />
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Schools Hosting IDPs?</label>
+    <select name="SectionD.SchoolsCurrentlyHostingIDPs" class="form-select">
+      <option value="false" selected="@(!Model.SchoolsCurrentlyHostingIDPs)">No</option>
+      <option value="true"  selected="@(Model.SchoolsCurrentlyHostingIDPs)">Yes</option>
+    </select>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Key Challenges</label>
+    <textarea name="SectionD.KeyChallenges" class="form-control" rows="2">@Model.EducationKeyChallenges</textarea>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Nearest Institution (if none in community)</label>
+    <input name="SectionD.NearestInstitutionIfNoneInCommunity" class="form-control"
+           value="@Model.NearestInstitutionIfNone" />
+  </div>
+  <div class="col-12">
+    <label class="form-label mb-2">Reasons Children Not in School</label>
+    <div class="d-flex flex-wrap gap-3">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToPoverty"      value="true" checked="@Model.OutOfSchoolDueToPoverty"      id="oosPoverty"><label class="form-check-label" for="oosPoverty">Poverty</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToInsecurity"   value="true" checked="@Model.OutOfSchoolDueToInsecurity"   id="oosInsec"><label class="form-check-label" for="oosInsec">Insecurity</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToChildLabour"  value="true" checked="@Model.OutOfSchoolDueToChildLabour"  id="oosLabour"><label class="form-check-label" for="oosLabour">Child Labour</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToEarlyMarriage" value="true" checked="@Model.OutOfSchoolDueToEarlyMarriage" id="oosMarriage"><label class="form-check-label" for="oosMarriage">Early Marriage</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToDistance"     value="true" checked="@Model.OutOfSchoolDueToDistance"     id="oosDistance"><label class="form-check-label" for="oosDistance">Distance</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionD.OutOfSchoolDueToIDPRelated"   value="true" checked="@Model.OutOfSchoolDueToIDPRelated"   id="oosIDP"><label class="form-check-label" for="oosIDP">IDP-Related</label></div>
+    </div>
+  </div>
+</div>
+
+<p class="section-divider">Educational Institutions</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead><tr><th>Name</th><th>Location</th><th>Type</th><th>Owner</th><th>Distance</th><th>Teachers</th><th>Infrastructure</th><th>Service</th><th>Est. Year</th><th>Conflict Closure?</th><th></th></tr></thead>
+    <tbody id="eduBody">
+      @{ int di = 0; }
+      @foreach (var inst in Model.EducationalInstitutions)
+      {
+        <tr>
+          <td><input name="SectionD.Institutions[@di].Name" value="@inst.Name" /></td>
+          <td><input name="SectionD.Institutions[@di].Location" value="@inst.Location" /></td>
+          <td><select name="SectionD.Institutions[@di].Type"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.EducationLevel>()){<option value="@t" selected="@(inst.Type==t)">@t.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionD.Institutions[@di].Owner" value="@inst.Owner" /></td>
+          <td><select name="SectionD.Institutions[@di].DistanceFromCentre"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d" selected="@(inst.DistanceFromCentre==d)">@d.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[@di].TeacherAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v" selected="@(inst.TeacherAvailability==v)">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[@di].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v" selected="@(inst.InfrastructureCondition==v)">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[@di].ServiceDeliveryQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v" selected="@(inst.ServiceDeliveryQuality==v)">@v.ToDisplayText()</option>}</select></td>
+          <td><input type="number" name="SectionD.Institutions[@di].YearEstablished" value="@inst.YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><select name="SectionD.Institutions[@di].DestroyedOrClosedDueToConflict"><option value="">–</option><option value="true" selected="@(inst.DestroyedOrClosedDueToConflict==true)">Yes</option><option value="false" selected="@(inst.DestroyedOrClosedDueToConflict==false)">No</option></select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        di++;
+      }
+      @if (!Model.EducationalInstitutions.Any())
+      {
+        <tr>
+          <td><input name="SectionD.Institutions[0].Name" /></td>
+          <td><input name="SectionD.Institutions[0].Location" /></td>
+          <td><select name="SectionD.Institutions[0].Type"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.EducationLevel>()){<option value="@t">@t.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionD.Institutions[0].Owner" /></td>
+          <td><select name="SectionD.Institutions[0].DistanceFromCentre"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d">@d.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[0].TeacherAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[0].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionD.Institutions[0].ServiceDeliveryQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><input type="number" name="SectionD.Institutions[0].YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
+          <td><select name="SectionD.Institutions[0].DestroyedOrClosedDueToConflict"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('eduBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Institution
+</button>

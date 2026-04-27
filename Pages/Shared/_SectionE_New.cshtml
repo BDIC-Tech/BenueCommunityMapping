@@ -1,0 +1,80 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <label class="form-label">Main Access Road Type</label>
+    <select name="SectionE.MainAccessRoadType" class="form-select">
+      <option value="">– Select –</option>
+      @foreach (var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadSurfaceType>())
+      { <option value="@t" selected="@(Model.MainAccessRoadType == t)">@t.ToDisplayText()</option> }
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Rainy Season Transport</label>
+    <div class="d-flex flex-wrap gap-2 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonMotorcycle"  value="true" checked="@Model.RainSeasonMotorcycle"  id="rsMoto"><label class="form-check-label" for="rsMoto">Motorcycle</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonCarBus"      value="true" checked="@Model.RainSeasonCarBus"      id="rsCar"><label class="form-check-label" for="rsCar">Car/Bus</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonWalking"    value="true" checked="@Model.RainSeasonWalking"    id="rsWalk"><label class="form-check-label" for="rsWalk">Walking</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonCanoeBoat"  value="true" checked="@Model.RainSeasonCanoeBoat"  id="rsCanoe"><label class="form-check-label" for="rsCanoe">Canoe/Boat</label></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Dry Season Transport</label>
+    <div class="d-flex flex-wrap gap-2 mt-1">
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonMotorcycle"  value="true" checked="@Model.DrySeasonMotorcycle"  id="dsMoto"><label class="form-check-label" for="dsMoto">Motorcycle</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonCarBus"      value="true" checked="@Model.DrySeasonCarBus"      id="dsCar"><label class="form-check-label" for="dsCar">Car/Bus</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonWalking"    value="true" checked="@Model.DrySeasonWalking"    id="dsWalk"><label class="form-check-label" for="dsWalk">Walking</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonCanoeBoat"  value="true" checked="@Model.DrySeasonCanoeBoat"  id="dsCanoe"><label class="form-check-label" for="dsCanoe">Canoe/Boat</label></div>
+    </div>
+  </div>
+  <div class="col-12">
+    <label class="form-label">Transport Challenges</label>
+    <textarea name="SectionE.TransportChallenges" class="form-control" rows="2">@Model.TransportChallenges</textarea>
+  </div>
+</div>
+<p class="section-divider">Road Details</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table"><thead><tr>
+    <th>Road Name</th><th>Rainy</th><th>Dry</th><th>Drainage</th>
+    <th>Built By</th><th>Yr Built</th><th>Renovated</th><th>Quality</th>
+    <th>Months Hard</th><th>Dangers</th><th></th>
+  </tr></thead>
+  <tbody id="roadsBody">
+    @{ int ei = 0; }
+    @foreach (var r in Model.AccessRoads)
+    {
+      <tr>
+        <td><input name="SectionE.AccessRoads[@ei].RoadName" value="@r.RoadName"/></td>
+        <td><select name="SectionE.AccessRoads[@ei].RainySeasonCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadPassability>()){<option value="@v" selected="@(r.RainySeasonCondition==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionE.AccessRoads[@ei].DrySeasonCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadPassability>()){<option value="@v" selected="@(r.DrySeasonCondition==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionE.AccessRoads[@ei].DrainageSystem"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrainagePresence>()){<option value="@v" selected="@(r.DrainageSystem==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><input name="SectionE.AccessRoads[@ei].WhoBuilt" value="@r.WhoBuilt"/></td>
+        <td><input type="number" name="SectionE.AccessRoads[@ei].YearConstructed" value="@r.YearConstructed" placeholder="YYYY" style="min-width:68px"/></td>
+        <td><input type="number" name="SectionE.AccessRoads[@ei].YearLastRenovated" value="@r.YearLastRenovated" placeholder="YYYY" style="min-width:68px"/></td>
+        <td><select name="SectionE.AccessRoads[@ei].InfrastructureWorkQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>()){<option value="@v" selected="@(r.InfrastructureWorkQuality==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><input type="number" name="SectionE.AccessRoads[@ei].MonthsAccessVeryDifficult" value="@r.MonthsAccessVeryDifficult" min="0" max="12" style="min-width:60px"/></td>
+        <td><select name="SectionE.AccessRoads[@ei].DangersFromBadAccess"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadDangerLevel>()){<option value="@v" selected="@(r.DangersFromBadAccess==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+      ei++;
+    }
+    @if (!Model.AccessRoads.Any())
+    {
+      <tr>
+        <td><input name="SectionE.AccessRoads[0].RoadName"/></td>
+        <td><select name="SectionE.AccessRoads[0].RainySeasonCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadPassability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionE.AccessRoads[0].DrySeasonCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadPassability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionE.AccessRoads[0].DrainageSystem"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrainagePresence>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><input name="SectionE.AccessRoads[0].WhoBuilt"/></td>
+        <td><input type="number" name="SectionE.AccessRoads[0].YearConstructed" placeholder="YYYY" style="min-width:68px"/></td>
+        <td><input type="number" name="SectionE.AccessRoads[0].YearLastRenovated" placeholder="YYYY" style="min-width:68px"/></td>
+        <td><select name="SectionE.AccessRoads[0].InfrastructureWorkQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><input type="number" name="SectionE.AccessRoads[0].MonthsAccessVeryDifficult" min="0" max="12" style="min-width:60px"/></td>
+        <td><select name="SectionE.AccessRoads[0].DangersFromBadAccess"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadDangerLevel>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+    }
+  </tbody></table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('roadsBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Road
+</button>

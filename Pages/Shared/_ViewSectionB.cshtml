@@ -1,0 +1,41 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseB">
+      <i class="bi bi-shop me-2 text-bsbs-green"></i>Section B: Markets and Economic Activities
+    </button>
+  </h2>
+  <div id="collapseB" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      @if (Model.Markets.Any())
+      {
+        <div class="table-responsive mb-3">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Location</th><th>Type</th><th>Size (m²)</th><th>Status</th><th>Infrastructure</th><th>Women/Youth?</th></tr></thead>
+            <tbody>
+              @foreach (var m in Model.Markets)
+              {
+                <tr>
+                  <td>@(m.Name ?? "–")</td><td>@(m.Location ?? "–")</td>
+                  <td>@(m.Type?.ToString() ?? "–")</td>
+                  <td>@(m.SizeSquareMeters?.ToString("N0") ?? "–")</td>
+                  <td><span class="status-badge status-@(m.MarketStatus?.ToString().ToLower() ?? "draft")">@(m.MarketStatus?.ToString() ?? "–")</span></td>
+                  <td>@(m.InfrastructureCondition?.ToString() ?? "–")</td>
+                  <td>@(m.WomenAndYouthMajorParticipants.HasValue ? (m.WomenAndYouthMajorParticipants.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No markets recorded.</p> }
+      <div class="row g-2 mt-2">
+        <div class="col-12"><small class="text-muted">Major Challenges:</small> @(Model.MarketChallenges ?? "–")</div>
+        <div class="col-md-4"><small class="text-muted">Affected by Insecurity?</small> @(Model.MarketActivitiesAffectedByInsecurity ? "Yes" : "No")</div>
+        <div class="col-md-4"><small class="text-muted">Traders from Outside Afraid?</small> @(Model.TradersFromOutsideAfraid ? "Yes" : "No")</div>
+        <div class="col-md-4"><small class="text-muted">Illegal Levy Paid?</small> @(Model.CommunityPaysIllegalLevy ? "Yes" : "No")</div>
+      </div>
+    </div>
+  </div>
+</div>

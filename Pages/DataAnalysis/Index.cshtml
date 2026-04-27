@@ -1,0 +1,769 @@
+@page
+@model BenueCommunityMapping.Pages.DataAnalysis.IndexModel
+@{
+    ViewData["Title"] = "Data Analysis";
+
+    // Build query string preserving all active filters
+    string QS(params (string k, string? v)[] extras)
+    {
+        var p = new System.Collections.Generic.List<string>();
+        if (Model.SelectedLGAId.HasValue)      p.Add($"lgaId={Model.SelectedLGAId}");
+        if (Model.SelectedWardId.HasValue)     p.Add($"wardId={Model.SelectedWardId}");
+        if (Model.SelectedKindredId.HasValue)  p.Add($"kindredId={Model.SelectedKindredId}");
+        if (Model.SelectedCommunityId.HasValue)p.Add($"communityId={Model.SelectedCommunityId}");
+        if (Model.FromDate.HasValue)           p.Add($"from={Model.FromDate:yyyy-MM-dd}");
+        if (Model.ToDate.HasValue)             p.Add($"to={Model.ToDate:yyyy-MM-dd}");
+        foreach (var (k, v) in extras) if (!string.IsNullOrEmpty(v)) p.Add($"{k}={Uri.EscapeDataString(v)}");
+        return p.Any() ? "?" + string.Join("&", p) : "";
+    }
+    string TabUrl(string t) => $"/DataAnalysis{QS(("tab", t))}";
+    string CatUrl(string cat) => $"/DataAnalysis{QS(("tab", Model.ActiveTab), ("category", cat))}";
+    bool IsTab(string t) => Model.ActiveTab == t;
+    bool IsCat(string c) => Model.ActiveCategory == c;
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE HERO
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-bar-chart-steps"></i></div>
+  <div>
+    <h1>Data Analysis</h1>
+    <p>
+      <strong>@Model.ScopeName</strong> &mdash;
+      <span class="text-bsbs-green fw-bold">@Model.ApprovedCount</span> approved
+      of @Model.TotalCount total submissions across
+      <span class="fw-bold">@Model.CommunityCount</span> communities
+    </p>
+  </div>
+  @if (User.IsInRole("Admin"))
+  {
+    <form method="post" asp-page-handler="RefreshSnapshot" class="ms-auto">
+      <button type="submit" class="btn btn-outline-secondary btn-sm"
+              onclick="return confirm('Refresh all analytics snapshots now?')">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh Snapshots
+      </button>
+    </form>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FILTER BAR — Location · Date · Category
+     ══════════════════════════════════════════════════════════════ -->
+<form method="get" id="filterForm" class="filter-bar mb-3">
+  <input type="hidden" name="tab"      value="@Model.ActiveTab" />
+  <input type="hidden" name="category" value="@Model.ActiveCategory" />
+  <div class="row g-2 align-items-end">
+    <!-- GEOGRAPHIC FILTERS (cascading) -->
+    <div class="col-6 col-md-2">
+      <label class="form-label mb-1 small fw-semibold"><i class="bi bi-building me-1"></i>LGA</label>
+      <select name="lgaId" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">All LGAs</option>
+        @foreach (var l in Model.LGAs)
+        { <option value="@l.Id" selected="@(l.Id==Model.SelectedLGAId)">@l.Name</option> }
+      </select>
+    </div>
+    @if (Model.Wards.Any())
+    {
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1 small fw-semibold"><i class="bi bi-grid-3x3-gap me-1"></i>Ward</label>
+        <select name="wardId" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Wards</option>
+          @foreach (var w in Model.Wards)
+          { <option value="@w.Id" selected="@(w.Id==Model.SelectedWardId)">@w.Name</option> }
+        </select>
+      </div>
+    }
+    @if (Model.Kindreds.Any())
+    {
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1 small fw-semibold"><i class="bi bi-people me-1"></i>Kindred</label>
+        <select name="kindredId" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Kindreds</option>
+          @foreach (var k in Model.Kindreds)
+          { <option value="@k.Id" selected="@(k.Id==Model.SelectedKindredId)">@k.Name</option> }
+        </select>
+      </div>
+    }
+    @if (Model.Communities.Any())
+    {
+      <div class="col-6 col-md-2">
+        <label class="form-label mb-1 small fw-semibold"><i class="bi bi-geo-alt me-1"></i>Community</label>
+        <select name="communityId" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Communities</option>
+          @foreach (var c in Model.Communities)
+          { <option value="@c.Id" selected="@(c.Id==Model.SelectedCommunityId)">@c.Name</option> }
+        </select>
+      </div>
+    }
+    <!-- DATE FILTERS -->
+    <div class="col-6 col-md-2">
+      <label class="form-label mb-1 small fw-semibold"><i class="bi bi-calendar-range me-1"></i>From</label>
+      <input type="date" name="from" class="form-control form-control-sm"
+             value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label mb-1 small fw-semibold">To</label>
+      <input type="date" name="to" class="form-control form-control-sm"
+             value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-bsbs-primary btn-sm">
+        <i class="bi bi-funnel-fill me-1"></i>Apply
+      </button>
+      <a href="/DataAnalysis?tab=@Model.ActiveTab" class="btn btn-outline-secondary btn-sm ms-1">
+        <i class="bi bi-x-circle me-1"></i>Clear
+      </a>
+    </div>
+  </div>
+</form>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CATEGORY FILTER PILLS
+     ══════════════════════════════════════════════════════════════ -->
+<div class="d-flex flex-wrap gap-1 mb-3">
+  @foreach (var (key, label) in BenueCommunityMapping.Pages.DataAnalysis.IndexModel.Categories)
+  {
+    <a href="@CatUrl(key)"
+       class="badge rounded-pill text-decoration-none @(IsCat(key) ? "bg-bsbs-green" : "bg-light text-dark")"
+       style="font-size:.78rem;padding:.35rem .7rem">
+      @label
+    </a>
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN TABS
+     ══════════════════════════════════════════════════════════════ -->
+<ul class="nav nav-tabs mb-0">
+  @foreach (var (key, label, icon) in new[] {
+    ("overview",   "Overview",       "bi-speedometer2"),
+    ("numerical",  "Numerical",      "bi-123"),
+    ("text",       "Text Analysis",  "bi-chat-left-text"),
+    ("search",     "Search",         "bi-search"),
+    ("compare",    "Compare",        "bi-table"),
+    ("timeseries", "Time-Series",    "bi-graph-up-arrow"),
+    ("export",     "Export",         "bi-download"),
+  })
+  {
+    <li class="nav-item">
+      <a class="nav-link @(IsTab(key)?"active":"")" href="@TabUrl(key)">
+        <i class="bi @icon me-1"></i>@label
+      </a>
+    </li>
+  }
+</ul>
+
+<div class="tab-body bg-white border border-top-0 rounded-bottom p-4">
+
+@if (Model.ApprovedCount == 0 && !IsTab("compare"))
+{
+  <div class="info-note">
+    <i class="bi bi-info-circle me-1"></i>
+    No approved submissions match the current filter.
+    @if (!IsTab("search")) { <span>Adjust the location/date filters above.</span> }
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 1: OVERVIEW
+     Quick summary KPIs + category breakdown
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("overview") && Model.Overview is { } ov)
+{
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    @KpiCard("bi-check-circle-fill","green",  Model.ApprovedCount.ToString(),  "Approved Submissions")
+    @KpiCard("bi-house-fill",       "blue",   Model.Overview.TotalHouseholds.ToString("N0"), "Est. Households")
+    @{ var hfM = ov.HealthMetrics.FirstOrDefault(m=>m.Label.Contains("formal")); }
+    @KpiCard("bi-heart-pulse-fill", "gold",   (hfM?.Count ?? 0).ToString(), "Health Facilities")
+    @{ var schM = ov.EducationMetrics.FirstOrDefault(m=>m.Label.Contains("Schools")); }
+    @KpiCard("bi-mortarboard-fill", "purple", (schM?.Count ?? 0).ToString(), "Schools")
+    @{ var mktM = ov.MarketMetrics.FirstOrDefault(m=>m.Label.Contains("Markets") && !m.Label.Contains("Poor")); }
+    @KpiCard("bi-shop",             "teal",   (mktM?.Count ?? 0).ToString(), "Markets")
+    @{ var secM = ov.SecurityMetrics.FirstOrDefault(m=>m.Label.Contains("Unsafe")); }
+    @KpiCard("bi-shield-exclamation","red",   $"{secM?.Percentage ?? 0}%", "Unsafe Communities")
+  </div>
+
+  <!-- Summary metrics grid (top 3 from each section) -->
+  <div class="row g-3 mb-4">
+    @QuickSection("Healthcare",    "bi-heart-pulse-fill", ov.HealthMetrics.Take(3))
+    @QuickSection("Education",     "bi-mortarboard-fill", ov.EducationMetrics.Take(3))
+    @QuickSection("Security",      "bi-shield",           ov.SecurityMetrics.Take(4))
+    @QuickSection("Environment",   "bi-tree-fill",        ov.EnvironmentMetrics.Take(4))
+    @QuickSection("Roads",         "bi-signpost-split",   ov.RoadMetrics.Take(3))
+    @QuickSection("Finance",       "bi-bank2",            ov.FinanceMetrics.Take(3))
+    @QuickSection("Markets",       "bi-shop",             ov.MarketMetrics.Take(3))
+    @QuickSection("Telecom",       "bi-wifi",             ov.TelecomMetrics.Take(3))
+  </div>
+
+  <!-- Category breakdown if a category pill is selected -->
+  @if (Model.ActiveCategory != "all" && Model.CategoryBreakdown.Any())
+  {
+    <div class="content-card">
+      <div class="content-card-header">
+        <i class="bi bi-funnel-fill"></i>
+        <h5>@(BenueCommunityMapping.Pages.DataAnalysis.IndexModel.Categories.FirstOrDefault(c=>c.Key==Model.ActiveCategory).Label) — Detailed Breakdown</h5>
+      </div>
+      <div class="content-card-body">
+        @HorizBars(Model.CategoryBreakdown)
+      </div>
+    </div>
+  }
+
+  <!-- Geographic coverage mini-table -->
+  <div class="content-card mt-4">
+    <div class="content-card-header"><i class="bi bi-geo-alt-fill"></i><h5>Geographic Coverage Summary</h5></div>
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead><tr><th>LGA</th><th class="text-end">Submissions</th><th class="text-end">Approved</th><th>Coverage Rate</th><th></th></tr></thead>
+        <tbody>
+          @foreach (var r in Model.LGASummary)
+          {
+            <tr>
+              <td class="fw-semibold">@r.Name <code class="text-muted" style="font-size:.75rem">@r.Code</code></td>
+              <td class="text-end">@r.TotalSubmissions</td>
+              <td class="text-end"><span class="badge bg-success">@r.ApprovedSubmissions</span></td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="bg-light rounded flex-fill" style="height:8px;max-width:100px">
+                    <div style="width:@r.CoverageRate%;height:8px;background:var(--bsbs-green);border-radius:4px"></div>
+                  </div>
+                  <span class="text-muted" style="font-size:.78rem">@r.CoverageRate%</span>
+                </div>
+              </td>
+              <td>
+                <a href="/DataAnalysis?tab=overview&lgaId=@r.Id" class="btn btn-xs btn-outline-secondary">
+                  <i class="bi bi-zoom-in"></i>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 2: NUMERICAL
+     Full metric tables — Count · Percentage · Ratio per 1,000 HH
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("numerical") && Model.Numerical is { } num)
+{
+  <div class="alert alert-light border mb-4" style="font-size:.85rem">
+    <i class="bi bi-info-circle me-1 text-bsbs-green"></i>
+    <strong>How to read this table:</strong>
+    <em>Count</em> = absolute total &bull;
+    <em>%</em> = percentage of all approved submissions &bull;
+    <em>Per 1,000 HH</em> = count per thousand estimated households (rate/ratio).
+    Use the category pills above to focus on a section.
+  </div>
+
+  var sections = Model.ActiveCategory switch {
+    "health"      => new[] { ("Healthcare", "bi-heart-pulse-fill", num.HealthMetrics) },
+    "education"   => new[] { ("Education",  "bi-mortarboard-fill", num.EducationMetrics) },
+    "markets"     => new[] { ("Markets",    "bi-shop",             num.MarketMetrics) },
+    "roads"       => new[] { ("Roads",      "bi-signpost-split",   num.RoadMetrics) },
+    "finance"     => new[] { ("Finance",    "bi-bank2",            num.FinanceMetrics) },
+    "environment" => new[] { ("Environment","bi-tree-fill",        num.EnvironmentMetrics) },
+    "security"    => new[] { ("Security",   "bi-shield",           num.SecurityMetrics) },
+    "telecom"     => new[] { ("Telecom",    "bi-wifi",             num.TelecomMetrics) },
+    _ => new[] {
+      ("Healthcare",  "bi-heart-pulse-fill", num.HealthMetrics),
+      ("Education",   "bi-mortarboard-fill", num.EducationMetrics),
+      ("Markets",     "bi-shop",             num.MarketMetrics),
+      ("Roads",       "bi-signpost-split",   num.RoadMetrics),
+      ("Finance",     "bi-bank2",            num.FinanceMetrics),
+      ("Environment", "bi-tree-fill",        num.EnvironmentMetrics),
+      ("Security",    "bi-shield",           num.SecurityMetrics),
+      ("Telecom",     "bi-wifi",             num.TelecomMetrics),
+    }
+  }; 
+
+  <div class="row g-4">
+    @foreach (var (title, icon, rows) in sections)
+    {
+      <div class="col-lg-6">
+        <div class="content-card h-100">
+          <div class="content-card-header"><i class="bi @icon"></i><h5>@title</h5></div>
+          <div class="table-responsive">
+            <table class="bsbs-table">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th class="text-end">Count</th>
+                  <th class="text-end">%</th>
+                  <th class="text-end">/ 1,000 HH</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach (var r in rows)
+                {
+                  <tr>
+                    <td>@r.Label @if (!string.IsNullOrEmpty(r.Note)) { <small class="text-muted ms-1">(@r.Note)</small> }</td>
+                    <td class="text-end fw-bold">@r.Count.ToString("N0")</td>
+                    <td class="text-end">
+                      <span class="badge" style="background:@PctCol(r.Percentage);min-width:42px">@r.Percentage%</span>
+                    </td>
+                    <td class="text-end text-muted">@r.RatioPer1000HH.ToString("N2")</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Cross-tabulations for this category -->
+  @if (Model.CrossTab1.Any() || Model.CrossTab2.Any())
+  {
+    <h5 class="mt-4 mb-3"><i class="bi bi-grid-3x3 me-2"></i>Cross-Tabulations</h5>
+    <div class="row g-4">
+      @if (Model.CrossTab1.Any())
+      {
+        <div class="col-lg-5">
+          <div class="content-card"><div class="content-card-header"><h6>Distribution 1</h6></div>
+            <div class="content-card-body">@HorizBars(Model.CrossTab1)</div></div>
+        </div>
+      }
+      @if (Model.CrossTab2.Any())
+      {
+        <div class="col-lg-5">
+          <div class="content-card"><div class="content-card-header"><h6>Distribution 2</h6></div>
+            <div class="content-card-body">@HorizBars(Model.CrossTab2)</div></div>
+        </div>
+      }
+    </div>
+  }
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 3: TEXT ANALYSIS
+     Keyword extraction · Frequency · Grouping of similar answers
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("text") && Model.TextData is { } td)
+{
+  <!-- Field selector + grouping controls -->
+  <form method="get" class="mb-4">
+    <input type="hidden" name="tab"      value="text" />
+    <input type="hidden" name="lgaId"     value="@Model.SelectedLGAId" />
+    <input type="hidden" name="wardId"    value="@Model.SelectedWardId" />
+    <input type="hidden" name="kindredId" value="@Model.SelectedKindredId" />
+    <input type="hidden" name="from"      value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+    <input type="hidden" name="to"        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+    <div class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label fw-semibold">Text field to group</label>
+        <select name="fieldKey" class="form-select">
+          @foreach (var (key, label) in BenueCommunityMapping.Pages.DataAnalysis.IndexModel.TextFieldOptions)
+          { <option value="@key" selected="@(key==Model.TextFieldKey)">@label</option> }
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-bsbs-primary">
+          <i class="bi bi-tags me-1"></i>Analyse
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- GROUPED RESPONSES (similar answer clustering) -->
+  @if (Model.TextGroups.Any())
+  {
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <i class="bi bi-collection-fill"></i>
+        <h5>Grouped Responses — @Model.GroupedFieldLabel</h5>
+        <span class="badge bg-secondary ms-auto">@Model.TextGroups.Count themes identified</span>
+      </div>
+      <div class="content-card-body">
+        <p class="text-muted small mb-3">
+          Responses grouped by dominant keyword. Each group shows up to 5 representative answers.
+        </p>
+        <div class="row g-3">
+          @foreach (var g in Model.TextGroups)
+          {
+            <div class="col-md-6">
+              <div class="border rounded p-3 h-100" style="border-left:4px solid var(--bsbs-green) !important">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge" style="background:var(--bsbs-green)">@g.Count</span>
+                  <strong style="text-transform:capitalize">@g.Theme</strong>
+                  <span class="text-muted small ms-auto">@g.Percentage% of responses</span>
+                </div>
+                <div class="bg-light rounded p-1 mb-2" style="height:6px">
+                  <div style="width:@g.Percentage%;height:6px;background:var(--bsbs-green);border-radius:3px"></div>
+                </div>
+                <ul class="mb-0 ps-3" style="font-size:.82rem">
+                  @foreach (var s in g.Samples)
+                  { <li class="text-muted mb-1">"@s"</li> }
+                </ul>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- KEYWORD FREQUENCY (all fields) -->
+  <h5 class="mb-3"><i class="bi bi-bar-chart me-2"></i>Keyword Frequency — All Text Fields</h5>
+  @foreach (var field in td.Fields)
+  {
+    @if (!field.TopKeywords.Any()) { continue; }
+    <div class="content-card mb-3">
+      <div class="content-card-header">
+        <i class="bi bi-chat-left-text"></i>
+        <h6 class="ms-1 mb-0">@field.FieldLabel</h6>
+        <span class="badge bg-secondary ms-auto">@field.ResponseCount responses</span>
+      </div>
+      <div class="content-card-body">
+        <div class="row g-2">
+          @foreach (var kw in field.TopKeywords.Take(15))
+          {
+            <div class="col-md-6 col-lg-4">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill" style="background:var(--bsbs-green);min-width:32px;font-size:.72rem">@kw.Count</span>
+                <div class="flex-fill bg-light rounded" style="height:14px">
+                  <div style="width:@Math.Min(kw.Percentage*3,100)%;height:14px;background:var(--bsbs-gold-light,#f5e6b0);border-radius:3px"></div>
+                </div>
+                <span style="min-width:90px;font-size:.8rem;text-transform:capitalize">@kw.Word</span>
+                <span class="text-muted" style="font-size:.72rem;min-width:32px">@kw.Percentage%</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 4: FULL-TEXT SEARCH
+     Search across all 13 text fields + priority needs + incidents
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("search"))
+{
+  <form method="get" class="mb-4">
+    <input type="hidden" name="tab"      value="search" />
+    <input type="hidden" name="lgaId"     value="@Model.SelectedLGAId" />
+    <input type="hidden" name="wardId"    value="@Model.SelectedWardId" />
+    <input type="hidden" name="kindredId" value="@Model.SelectedKindredId" />
+    <input type="hidden" name="from"      value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+    <input type="hidden" name="to"        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+    <div class="input-group input-group-lg mb-1">
+      <span class="input-group-text bg-bsbs-green text-white"><i class="bi bi-search"></i></span>
+      <input type="text" name="q" class="form-control form-control-lg"
+             value="@Model.SearchQuery" autofocus
+             placeholder="Search across all text fields — e.g. 'flooding', 'road', 'disease', 'IDP'…" />
+      <button type="submit" class="btn btn-bsbs-primary px-4">Search</button>
+    </div>
+    <small class="text-muted">
+      Searches 13 free-text fields + all priority needs + all security incident records.
+      Filterable by LGA, Ward, Kindred, Community, and date range above.
+    </small>
+  </form>
+
+  @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+  {
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <span class="badge" style="background:var(--bsbs-green);font-size:.85rem">@Model.SearchResults.Count results</span>
+      <span>for <strong>"@Model.SearchQuery"</strong></span>
+      @if (Model.SearchResults.Count == 200)
+      { <span class="text-muted small">(capped at 200 — refine your search or add location filters)</span> }
+    </div>
+
+    @if (Model.SearchResults.Any())
+    {
+      <div class="table-responsive">
+        <table class="bsbs-table">
+          <thead>
+            <tr>
+              <th>Community</th><th>LGA</th><th>Ward</th>
+              <th>Field</th><th>Context</th><th>Date</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var r in Model.SearchResults)
+            {
+              <tr>
+                <td class="fw-semibold text-bsbs-green">@r.CommunityName</td>
+                <td class="text-muted">@r.LGA</td>
+                <td class="text-muted">@r.Ward</td>
+                <td>
+                  <span class="badge bg-secondary rounded-pill" style="font-size:.7rem">@r.FieldName</span>
+                </td>
+                <td style="font-size:.83rem;max-width:360px;color:#444">
+                  @r.Snippet
+                </td>
+                <td class="text-muted" style="font-size:.78rem;white-space:nowrap">
+                  @r.Date.ToString("dd MMM yyyy")
+                </td>
+                <td>
+                  <a asp-page="/Questionnaire/View" asp-route-id="@r.SubmissionId"
+                     target="_blank" class="btn btn-xs btn-outline-secondary">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    else
+    {
+      <div class="alert alert-secondary">
+        <i class="bi bi-search me-2"></i>No matches found for "@Model.SearchQuery".
+        Try a shorter term or remove location/date filters.
+      </div>
+    }
+  }
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 5: COMPARE
+     LGA side-by-side comparison + Community metrics table
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("compare"))
+{
+  <!-- Metric selector -->
+  <form method="get" class="mb-4">
+    <input type="hidden" name="tab"      value="compare" />
+    <input type="hidden" name="lgaId"     value="@Model.SelectedLGAId" />
+    <input type="hidden" name="wardId"    value="@Model.SelectedWardId" />
+    <input type="hidden" name="kindredId" value="@Model.SelectedKindredId" />
+    <input type="hidden" name="from"      value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+    <input type="hidden" name="to"        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+    <div class="row g-2 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label fw-semibold">Metric to compare across LGAs</label>
+        <select name="compareMetric" class="form-select">
+          @foreach (var (key, label) in BenueCommunityMapping.Pages.DataAnalysis.IndexModel.CompareMetrics)
+          { <option value="@key" selected="@(key==Model.CompareMetric)">@label</option> }
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-bsbs-primary">
+          <i class="bi bi-table me-1"></i>Compare
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- LGA comparison bar chart + table -->
+  @if (Model.LGAComparison.Any())
+  {
+    var maxVal = Model.LGAComparison.Max(r => r.Value);
+    <div class="content-card mb-4">
+      <div class="content-card-header">
+        <i class="bi bi-bar-chart-horizontal-fill"></i>
+        <h5>LGA Comparison — @(BenueCommunityMapping.Pages.DataAnalysis.IndexModel.CompareMetrics.FirstOrDefault(m=>m.Key==Model.CompareMetric).Label)</h5>
+      </div>
+      <div class="content-card-body">
+        @foreach (var r in Model.LGAComparison)
+        {
+          double barPct = maxVal > 0 ? Math.Round(r.Value / maxVal * 100, 1) : 0;
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <a href="/DataAnalysis?tab=compare&compareMetric=@Model.CompareMetric&lgaId=@r.LGAId"
+               style="min-width:140px;font-size:.83rem;text-decoration:none;color:var(--bsbs-dark)">
+              <strong>@r.LGAName</strong>
+            </a>
+            <div class="flex-fill bg-light rounded" style="height:18px;max-width:340px">
+              <div style="width:@barPct%;height:18px;background:var(--bsbs-green);border-radius:4px;min-width:4px"></div>
+            </div>
+            <span style="min-width:150px;font-size:.82rem;color:#555">
+              @r.ValueLabel
+              <span class="text-muted">(@r.Submissions subs / @r.Communities comm)</span>
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Community metrics table (when a scope is selected) -->
+  @if (Model.CommunityMetrics.Any())
+  {
+    <div class="content-card">
+      <div class="content-card-header">
+        <i class="bi bi-geo-alt-fill"></i>
+        <h5>Community-Level Metrics — @Model.ScopeName</h5>
+        <span class="badge bg-secondary ms-auto">@Model.CommunityMetrics.Count communities</span>
+      </div>
+      <div class="table-responsive">
+        <table class="bsbs-table" style="font-size:.82rem">
+          <thead>
+            <tr>
+              <th>Community</th><th>Kindred</th><th>Ward</th><th class="text-end">HH</th>
+              <th class="text-end">Health Fac.</th><th class="text-end">Schools</th>
+              <th class="text-end">Kids OOS</th><th class="text-end">Markets</th>
+              <th>Ambulance</th><th>Tarred Rd</th><th>Bank</th><th>Borehole</th>
+              <th>Security</th><th>Top Priority</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var r in Model.CommunityMetrics.OrderBy(c=>c.LGAName).ThenBy(c=>c.WardName).ThenBy(c=>c.CommunityName))
+            {
+              <tr>
+                <td class="fw-semibold">@r.CommunityName <code class="text-muted">@r.CommunityCode</code></td>
+                <td class="text-muted">@r.KindredName</td>
+                <td class="text-muted">@r.WardName</td>
+                <td class="text-end">@r.EstHouseholds.ToString("N0")</td>
+                <td class="text-end">@r.HealthFacilities</td>
+                <td class="text-end">@r.Schools</td>
+                <td class="text-end @(r.ChildrenNotInSchool > 20 ? "text-danger fw-bold" : "")">@r.ChildrenNotInSchool</td>
+                <td class="text-end">@r.Markets</td>
+                <td class="text-center">@BoolBadge(r.FunctionalAmbulance)</td>
+                <td class="text-center">@BoolBadge(r.TarredRoad)</td>
+                <td class="text-center">@BoolBadge(r.FormalBanking)</td>
+                <td class="text-center">@BoolBadge(r.Borehole)</td>
+                <td>
+                  @if (r.SecuritySituation != null)
+                  {
+                    <span class="badge @(r.SecuritySituation=="Unsafe"?"bg-danger":r.SecuritySituation=="FairlySafe"?"bg-warning text-dark":"bg-success")"
+                          style="font-size:.7rem">@r.SecuritySituation</span>
+                  }
+                </td>
+                <td style="max-width:160px;font-size:.78rem;color:#555" title="@r.TopPriorityNeed">
+                  @(r.TopPriorityNeed?.Length > 60 ? r.TopPriorityNeed[..60]+"…" : r.TopPriorityNeed ?? "–")
+                </td>
+                <td>
+                  <a href="/DataAnalysis?tab=overview&communityId=@r.CommunityId" class="btn btn-xs btn-outline-secondary">
+                    <i class="bi bi-zoom-in"></i>
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+  else if (!Model.SelectedLGAId.HasValue)
+  {
+    <div class="info-note">
+      <i class="bi bi-lightbulb me-1"></i>
+      Select an LGA (or Ward / Kindred) from the filter above to see the community-level data table.
+    </div>
+  }
+}
+
+<!-- ══════════════════════════════════════════════════════════════
+     TAB 6: TIME-SERIES
+     Trends over time — filterable by period group
+     ══════════════════════════════════════════════════════════════ -->
+@if (IsTab("timeseries"))
+{
+  <form method="get" class="mb-4">
+    <input type="hidden" name="tab"      value="timeseries" />
+    <input type="hidden" name="lgaId"     value="@Model.SelectedLGAId" />
+    <input type="hidden" name="wardId"    value="@Model.SelectedWardId" />
+    <input type="hidden" name="kindredId" value="@Model.SelectedKindredId" />
+    <input type="hidden" name="from"      value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+    <input type="hidden" name="to"        value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+    <div class="d-flex align-items-center gap-3">
+      <label class="fw-semibold small">Group by:</label>
+      @foreach (var (key, label) in new[] { ("month","Month"), ("quarter","Quarter"), ("year","Year") })
+      {
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="groupBy" value="@key"
+                 id="gb_@key" @(Model.GroupBy==key?"checked":"")
+                 onchange="this.form.submit()" />
+          <label class="form-check-label" for="gb_@key">@label</label>
+        </div>
+      }
+    </div>
+  </form>
+
+  @BarChart("Approved Submissions Over Time",       Model.SubmissionsSeries, "#2d6a4f", "Submissions")
+  @BarChart("Avg Households per Community",         Model.HouseholdsSeries,  "#b5800f", "Avg HH")
+  @BarChart("Avg Children Not in School per Community", Model.ChildrenOOSSeries, "#7b3030", "Avg children")
+}
+
+@* ══════════════════════════════════════════════════════════════
+     TAB 7: EXPORT
+     Excel · CSV · PDF · DOCX downloads
+     ══════════════════════════════════════════════════════════════ *@
+@if (IsTab("export"))
+{
+    ViewData["ExportLgaId"]       = Model.SelectedLGAId?.ToString();
+    ViewData["ExportWardId"]      = Model.SelectedWardId?.ToString();
+    ViewData["ExportKindredId"]   = Model.SelectedKindredId?.ToString();
+    ViewData["ExportCommunityId"] = Model.SelectedCommunityId?.ToString();
+    ViewData["ExportFrom"]        = Model.FromDate?.ToString("yyyy-MM-dd");
+    ViewData["ExportTo"]          = Model.ToDate?.ToString("yyyy-MM-dd");
+    <partial name="/Pages/Shared/_ExportPanel.cshtml" />
+}
+
+</div><!-- end tab-body -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     HELPER FUNCTIONS
+     ══════════════════════════════════════════════════════════════ -->
+@functions {
+    string PctCol(double p) =>
+        p >= 70 ? "#2d6a4f" : p >= 40 ? "#b5800f" : p >= 15 ? "#9c4221" : "#7b3030";
+
+    IHtmlContent KpiCard(string icon, string color, string value, string label) =>
+        new HtmlString($"<div class=\"col-6 col-md-2\"><div class=\"stat-card\"><div class=\"stat-icon {color}\"><i class=\"bi {icon}\"></i></div><div><div class=\"stat-value\">{value}</div><div class=\"stat-label\">{label}</div></div></div></div>");
+
+    IHtmlContent QuickSection(string title, string icon,
+        IEnumerable<BenueCommunityMapping.Services.Analytics.MetricRow> rows)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class=\"col-lg-3 col-md-6\"><div class=\"content-card h-100\"><div class=\"content-card-header\" style=\"padding:.5rem 1rem\"><i class=\"bi {icon}\"></i><h6 class=\"ms-1 mb-0\">{title}</h6></div><div class=\"content-card-body\" style=\"padding:.75rem\">");
+        foreach (var r in rows)
+        {
+            sb.Append($"<div class=\"d-flex justify-content-between align-items-center mb-2\" style=\"font-size:.82rem\">");
+            sb.Append($"<span class=\"text-muted\">{r.Label}</span>");
+            sb.Append($"<span><strong>{r.Count:N0}</strong> <span class=\"badge ms-1\" style=\"background:{PctCol(r.Percentage)};font-size:.7rem\">{r.Percentage}%</span></span>");
+            sb.Append("</div>");
+        }
+        sb.Append("</div></div></div>");
+        return new HtmlString(sb.ToString());
+    }
+
+    IHtmlContent HorizBars(IReadOnlyList<BenueCommunityMapping.Services.Analytics.CrossTabRow> rows)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var r in rows)
+        {
+            sb.Append("<div class=\"d-flex align-items-center gap-2 mb-2\">");
+            sb.Append($"<span style=\"min-width:160px;font-size:.82rem;color:#555\">{r.Category}</span>");
+            sb.Append($"<div class=\"flex-fill bg-light rounded\" style=\"height:14px\"><div style=\"width:{r.Percentage}%;height:14px;background:var(--bsbs-green);border-radius:4px;min-width:3px\"></div></div>");
+            sb.Append($"<span style=\"min-width:70px;font-size:.78rem;text-align:right\">{r.Count:N0} <span class=\"text-muted\">({r.Percentage}%)</span></span>");
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    IHtmlContent BoolBadge(bool v) =>
+        new HtmlString(v
+            ? "<span class=\"badge bg-success\" style=\"font-size:.65rem\">Yes</span>"
+            : "<span class=\"badge bg-light text-muted\" style=\"font-size:.65rem\">No</span>");
+
+    IHtmlContent BarChart(string title,
+        IReadOnlyList<BenueCommunityMapping.Services.Analytics.TimeSeriesPoint> pts,
+        string color, string label)
+    {
+        if (!pts.Any())
+            return new HtmlString($"<div class=\"content-card mb-4\"><div class=\"content-card-header\"><h5>{title}</h5></div><div class=\"content-card-body text-muted\">No data for selected period.</div></div>");
+        int maxC = Math.Max(pts.Max(p => p.Count), 1);
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class=\"content-card mb-4\"><div class=\"content-card-header\"><h5>{title}</h5></div><div class=\"content-card-body\"><div class=\"d-flex align-items-end gap-1\" style=\"height:130px;overflow-x:auto;padding-bottom:4px\">");
+        foreach (var p in pts)
+        {
+            int barH = (int)Math.Round((double)p.Count / maxC * 110);
+            sb.Append($"<div class=\"d-flex flex-column align-items-center\" style=\"min-width:44px\">");
+            sb.Append($"<span style=\"font-size:.65rem;color:#888;margin-bottom:2px\">{p.Count}</span>");
+            sb.Append($"<div style=\"width:26px;height:{barH}px;background:{color};border-radius:4px 4px 0 0;min-height:3px\" title=\"{p.Period}: {p.Count} {label}\"></div>");
+            sb.Append($"<span style=\"font-size:.6rem;color:#aaa;writing-mode:vertical-lr;margin-top:3px\">{p.Period}</span>");
+            sb.Append("</div>");
+        }
+        sb.Append("</div></div></div>");
+        return new HtmlString(sb.ToString());
+    }
+}

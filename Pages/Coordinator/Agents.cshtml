@@ -1,0 +1,128 @@
+@page
+@model BenueCommunityMapping.Pages.Coordinator.AgentsModel
+@{
+    ViewData["Title"] = "My Agents";
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-people"></i></div>
+  <div>
+    <h1>My Field Agents</h1>
+    <p>Agents assigned to you – view their activity, manage accounts</p>
+  </div>
+  <a asp-page="CreateAgent" class="btn btn-bsbs-gold ms-auto">
+    <i class="bi bi-person-plus me-1"></i>Add Agent
+  </a>
+</div>
+
+<div class="table-card">
+  <div class="table-card-header">
+    <i class="bi bi-person-badge text-bsbs-green fs-5"></i>
+    <h5 class="ms-1">Agents</h5>
+    <span class="ms-auto badge bg-secondary">@Model.List.TotalItems</span>
+  </div>
+  @if (!Model.List.Data.Any())
+  {
+    <div class="empty-state">
+      <i class="bi bi-person-x"></i>
+      <p>You have no agents yet. Click <strong>Add Agent</strong> to create one.</p>
+    </div>
+  }
+  else
+  {
+    <div class="table-responsive">
+      <table class="bsbs-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Agent Name</th><th>Email</th><th>LGA</th>
+            <th>Ward</th><th>Submissions</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @{ int i = ((Model.List.PageNumber - 1) * 20) + 1; }
+          @foreach (var a in Model.List.Data)
+          {
+            <tr>
+              <td class="text-muted">@(i++)</td>
+              <td><strong>@a.FullName</strong></td>
+              <td class="text-muted">@a.Email</td>
+              <td>@(a.LGA ?? "–")</td>
+              <td>@(a.AssignedWard ?? "–")</td>
+              <td><span class="badge bg-secondary rounded-pill">@a.SubmissionCount</span></td>
+              <td>
+                @if (a.IsActive) { <span class="badge bg-success">Active</span> }
+                else { <span class="badge bg-secondary">Inactive</span> }
+              </td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a asp-page="/Coordinator/Submissions" asp-route-search="@a.FullName"
+                     class="btn btn-sm btn-bsbs-outline" title="View Submissions">
+                    <i class="bi bi-collection me-1"></i>Submissions
+                  </a>
+                  <form method="post" asp-page-handler="Toggle" asp-route-id="@a.Id">
+                    <button type="submit"
+                            class="btn btn-sm @(a.IsActive ? "btn-outline-warning" : "btn-outline-success")"
+                            title="@(a.IsActive ? "Deactivate" : "Activate")">
+                      <i class="bi @(a.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                    </button>
+                  </form>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" title="Reset Password"
+                          data-bs-toggle="modal" data-bs-target="#resetPwdModal"
+                          data-agent-id="@a.Id" data-agent-name="@a.FullName">
+                    <i class="bi bi-key"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3 mb-3">
+      <cs-pager cs-paging-pagenumber="@Model.List.PageNumber"
+                cs-paging-totalitems="@Model.List.TotalItems"
+                cs-paging-maxpageritems="10"
+                cs-pagenumber-param="p"
+                asp-page="Agents"
+                cs-pager-ul-class="pagination"
+                cs-pager-li-current-class="page-item active"
+                cs-pager-link-other-class="page-link"
+                cs-pager-link-current-class="page-link"></cs-pager>
+    </div>
+  }
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPwdModal" tabindex="-1" aria-labelledby="resetPwdLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" asp-page-handler="ResetPassword" id="resetPwdForm">
+      <input type="hidden" name="id" id="resetPwdAgentId" />
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="resetPwdLabel">Reset Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Set a new password for <strong id="resetPwdAgentName"></strong>:</p>
+          <input type="password" name="newPassword" class="form-control"
+                 placeholder="Min 8 chars, upper, digit, symbol" required minlength="8" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-bsbs-primary"><i class="bi bi-key me-1"></i>Reset Password</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+@section Scripts {
+  <script>
+    document.getElementById('resetPwdModal').addEventListener('show.bs.modal', function (e) {
+      var btn = e.relatedTarget;
+      document.getElementById('resetPwdAgentId').value = btn.getAttribute('data-agent-id');
+      document.getElementById('resetPwdAgentName').textContent = btn.getAttribute('data-agent-name');
+    });
+  </script>
+}

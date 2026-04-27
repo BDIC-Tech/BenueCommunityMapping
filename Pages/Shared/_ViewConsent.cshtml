@@ -1,0 +1,57 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseConsent">
+      <i class="bi bi-pen-fill me-2 text-bsbs-green"></i>Consent and Authentication
+    </button>
+  </h2>
+  <div id="collapseConsent" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      @{ var signatories = Model.ConsentSignatories.Where(s => s.AuthLevel == null).ToList(); }
+      @if (signatories.Any())
+      {
+        <div class="row g-3 mb-4">
+          @foreach (var sig in signatories)
+          {
+            <div class="col-md-3">
+              <div class="content-card">
+                <div class="content-card-header" style="padding:.5rem 1rem"><h6 class="mb-0">@sig.Role</h6></div>
+                <div class="content-card-body" style="padding:.75rem;font-size:.85rem">
+                  <div><small class="text-muted">Name:</small> @(sig.Name ?? "–")</div>
+                  <div><small class="text-muted">Phone:</small> @(sig.PhoneNumber ?? "–")</div>
+                  <div><small class="text-muted">Signature:</small> @(sig.Signature ?? "–")</div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @{ var authLevels = Model.ConsentSignatories.Where(s => s.AuthLevel != null).ToList(); }
+      @if (authLevels.Any())
+      {
+        <p class="section-divider">Authorization by Traditional Leaders</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Level</th><th>Title</th><th>Name</th><th>Signature</th></tr></thead>
+            <tbody>
+              @foreach (var auth in authLevels)
+              {
+                <tr>
+                  <td>@auth.AuthLevel</td>
+                  <td style="font-style:italic;color:var(--bsbs-green)">@auth.AuthTitle</td>
+                  <td>@(auth.Name ?? "–")</td>
+                  <td>@(auth.Signature ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (!signatories.Any() && !authLevels.Any())
+      {
+        <p class="text-muted">No consent data recorded.</p>
+      }
+    </div>
+  </div>
+</div>

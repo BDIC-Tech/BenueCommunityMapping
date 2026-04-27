@@ -1,0 +1,46 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+<div class="accordion-item border-0 mb-2">
+  <h2 class="accordion-header">
+    <button class="accordion-button collapsed fw-semibold" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseC">
+      <i class="bi bi-heart-pulse me-2 text-bsbs-green"></i>Section C: Healthcare Facilities
+    </button>
+  </h2>
+  <div id="collapseC" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
+    <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+      <div class="row g-2 mb-3">
+        <div class="col-md-3"><small class="text-muted d-block">Ambulance / Referral</small><strong>@(Model.FunctionalAmbulanceOrReferral ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Childbirth Deaths (2 yrs)</small><strong>@(Model.WomenDiedDuringChildbirthLast2Years ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Night Emergency Transport</small><strong>@(Model.PregnantWomenCanAccessEmergencyTransportAtNight ? "Yes" : "No")</strong></div>
+        <div class="col-md-9"><small class="text-muted d-block">Major Diseases</small><span>@(Model.MajorDiseasesReported ?? "–")</span></div>
+        @if (!string.IsNullOrEmpty(Model.NearestHealthFacilityIfNone))
+        {
+          <div class="col-12"><small class="text-muted">Nearest Facility (no community facility):</small> @Model.NearestHealthFacilityIfNone</div>
+        }
+      </div>
+      @if (Model.HealthFacilities.Any())
+      {
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Distance</th><th>Staff</th><th>Infrastructure</th><th>Service</th><th>Essential Drugs</th><th>IDPs?</th></tr></thead>
+            <tbody>
+              @foreach (var f in Model.HealthFacilities)
+              {
+                <tr>
+                  <td>@(f.Name ?? "–")</td><td>@(f.Type?.ToString() ?? "–")</td>
+                  <td>@(f.DistanceFromCentre?.ToString() ?? "–")</td>
+                  <td>@(f.HealthcareStaffAvailability?.ToString() ?? "–")</td>
+                  <td>@(f.InfrastructureCondition?.ToString() ?? "–")</td>
+                  <td>@(f.ServiceDeliveryCondition?.ToString() ?? "–")</td>
+                  <td>@(f.EssentialDrugsAvailability?.ToString() ?? "–")</td>
+                  <td>@(f.IDPsAllowedWithoutDiscrimination.HasValue ? (f.IDPsAllowedWithoutDiscrimination.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      else { <p class="text-muted">No health facilities recorded.</p> }
+    </div>
+  </div>
+</div>

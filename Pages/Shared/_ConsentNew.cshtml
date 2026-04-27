@@ -1,0 +1,63 @@
+@model BenueCommunityMapping.Models.QuestionnaireSubmission
+@{
+  var signatories = Model.ConsentSignatories.Where(s => s.AuthLevel == null).ToList();
+  var authLevels  = Model.ConsentSignatories.Where(s => s.AuthLevel != null).ToList();
+  var sigRoles = new[] {
+    ("TraditionalRuler","Traditional Ruler","bi-person-badge-fill"),
+    ("WomenLeader","Women Leader","bi-person-heart"),
+    ("YouthLeader","Youth Leader","bi-stars"),
+    ("ReligiousLeader","Religious Leader","bi-book-fill")
+  };
+  var authRows = new[] {
+    ("ClanLevelTorKpande","Clan Level","Tor Kpande"),
+    ("KindredLevelOrtar","Kindred Level","Ortar"),
+    ("CouncilWardLevelTyoor","Council Ward","Tyoor"),
+    ("LGALineageLevelMueTer","LGA Lineage","Mue Ter"),
+    ("LGALevelTer","LGA Level","Ter")
+  };
+}
+<div class="info-note"><i class="bi bi-shield-lock me-1"></i>All information is strictly confidential and used solely for official statistical purposes.</div>
+
+<div class="row g-3 mb-4">
+  @foreach (var (role, label, icon) in sigRoles)
+  {
+    var existing = signatories.FirstOrDefault(s => s.Role == role);
+    <div class="col-md-6 col-lg-3">
+      <div class="content-card">
+        <div class="content-card-header" style="padding:.5rem 1rem">
+          <i class="bi @icon"></i><h6 class="ms-1 mb-0">@label</h6>
+        </div>
+        <div class="content-card-body" style="padding:.75rem">
+          <div class="mb-2"><label class="form-label">Name</label>
+            <input name="Consent.@(role).Name" class="form-control form-control-sm"
+                   value="@(existing?.Name)" placeholder="Full name"/></div>
+          <div class="mb-2"><label class="form-label">Phone</label>
+            <input name="Consent.@(role).PhoneNumber" class="form-control form-control-sm"
+                   value="@(existing?.PhoneNumber)" placeholder="08XX XXX XXXX"/></div>
+          <div><label class="form-label">Signature</label>
+            <input name="Consent.@(role).Signature" class="form-control form-control-sm"
+                   value="@(existing?.Signature)" placeholder="Signature"/></div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<p class="section-divider">Authorization by Traditional Leaders</p>
+<div class="table-responsive">
+  <table class="dyn-table"><thead><tr><th>Level</th><th>Title</th><th>Name</th><th>Signature</th></tr></thead>
+  <tbody>
+    @foreach (var (prop, level, title) in authRows)
+    {
+      var existing = authLevels.FirstOrDefault(a => a.AuthLevel == level);
+      <tr>
+        <td>@level</td>
+        <td style="color:var(--bsbs-green);font-style:italic">@title</td>
+        <td><input name="Consent.@(prop).Name" class="form-control form-control-sm"
+                   value="@(existing?.Name)" placeholder="Full name"/></td>
+        <td><input name="Consent.@(prop).Signature" class="form-control form-control-sm"
+                   value="@(existing?.Signature)" placeholder="Signature"/></td>
+      </tr>
+    }
+  </tbody></table>
+</div>

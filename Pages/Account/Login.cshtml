@@ -1,0 +1,108 @@
+@page
+@model BenueCommunityMapping.Pages.Account.LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – BSBS Community Mapping</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { background: #0e1e12; font-family: 'DM Sans', sans-serif; min-height: 100vh; display:flex; align-items:center; justify-content:center; }
+    .login-card { background:#fff; border-radius:16px; overflow:hidden; max-width:440px; width:100%; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .login-header { background: linear-gradient(135deg, #0e1e12, #1e3a24); padding: 2rem; text-align:center; border-bottom: 4px solid #c8931a; }
+    .login-seal { width:64px;height:64px;border-radius:50%;background:#c8931a;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#0e1e12;margin:0 auto 1rem; }
+    .login-header h1 { font-family:'Playfair Display',serif; color:#fff; font-size:1.25rem; margin:0; }
+    .login-header p { color:#a8c4b0; font-size:.8rem; margin:.25rem 0 0; }
+    .login-body { padding:2rem; }
+    .form-control:focus { border-color:#1a6b3a; box-shadow:0 0 0 3px rgba(26,107,58,.12); }
+    .btn-login { background:#1a6b3a; color:#fff; border:none; font-weight:700; width:100%; padding:.7rem; border-radius:8px; font-size:.95rem; }
+    .btn-login:hover { background:#155730; color:#fff; }
+    .input-group-text { background:#f4f7f5; border-color:#d0ddd4; }
+    .creds-hint { background:#e8f4ec; border-radius:8px; padding:.75rem 1rem; font-size:.78rem; color:#1a6b3a; }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-header">
+    <div class="login-seal"><i class="bi bi-shield-fill-check"></i></div>
+    <h1>BSBS Community Mapping</h1>
+    <p>Benue State Bureau of Statistics – Field Data System</p>
+  </div>
+  <div class="login-body">
+    <form method="post">
+      <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+      @if (TempData["Success"] != null)
+      {
+          <div class="alert alert-success py-2 mb-3">
+              <i class="bi bi-check-circle me-1"></i>@TempData["Success"]
+          </div>
+      }
+
+      @if (ViewData["UnverifiedEmail"] != null)
+      {
+          <div class="alert alert-warning py-2 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span style="font-size: 0.85rem;">Didn't receive the email?</span>
+              <button type="submit" asp-page-handler="ResendVerification" 
+                      asp-route-email="@ViewData["UnverifiedEmail"]"
+                      class="btn btn-sm btn-outline-success fw-bold" formnovalidate>
+                  Resend Verification Email
+              </button>
+          </div>
+      }
+
+      <div class="mb-3">
+        <label asp-for="Input.Email" class="form-label fw-semibold">Email Address</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input asp-for="Input.Email" class="form-control" placeholder="your@email.ng" autocomplete="username" />
+        </div>
+        <span asp-validation-for="Input.Email" class="text-danger small"></span>
+      </div>
+
+      <div class="mb-4">
+        <label asp-for="Input.Password" class="form-label fw-semibold">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input asp-for="Input.Password" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+        <div class="d-flex justify-content-between mt-1">
+          <a asp-page="ResendVerification"
+             style="font-size:.82rem;color:#1a6b3a;text-decoration:none;font-weight:600;">
+            <i class="bi bi-envelope-paper me-1"></i>Resend Verification
+          </a>
+          <a asp-page="ForgotPassword"
+             style="font-size:.82rem;color:#1a6b3a;text-decoration:none;font-weight:600;">
+            <i class="bi bi-key me-1"></i>Forgot Password?
+          </a>
+        </div>
+      </div>
+
+      <div class="mb-4 form-check">
+        <input asp-for="Input.RememberMe" class="form-check-input" type="checkbox" />
+        <label asp-for="Input.RememberMe" class="form-check-label">Keep me signed in</label>
+      </div>
+
+      <button type="submit" class="btn btn-login mb-3">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+      </button>
+
+      @* <div class="creds-hint">
+        <strong><i class="bi bi-info-circle me-1"></i>Default Credentials</strong><br/>
+        Admin: <code>admin@bsbs.gov.ng</code> / <code>Admin@12345!</code><br/>
+        Coordinator: <code>coordinator1@bsbs.gov.ng</code> / <code>Coord@12345!</code><br/>
+        Agent: <code>agent1@bsbs.gov.ng</code> / <code>Agent@12345!</code>
+      </div> *@
+    </form>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
