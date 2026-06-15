@@ -158,18 +158,56 @@ namespace BenueCommunityMapping.Models.Survey
 
         // ── TEXT ANALYSIS — JSON frequency arrays ──────────────────────
         // Each stores top-N keywords as JSON: [{"word":"water","count":42,"pct":31.2}, ...]
-        [MaxLength(4000)] public string? KeywordsMarketChallenges          { get; set; }
-        [MaxLength(4000)] public string? KeywordsHealthDiseases            { get; set; }
-        [MaxLength(4000)] public string? KeywordsEducationChallenges       { get; set; }
-        [MaxLength(4000)] public string? KeywordsTransportChallenges       { get; set; }
-        [MaxLength(4000)] public string? KeywordsFinancialChallenges       { get; set; }
-        [MaxLength(4000)] public string? KeywordsNaturalFeatures           { get; set; }
-        [MaxLength(4000)] public string? KeywordsTelecomChallenges         { get; set; }
-        [MaxLength(4000)] public string? KeywordsSecurityIssues            { get; set; }
-        [MaxLength(4000)] public string? KeywordsDisputeResolution         { get; set; }
-        [MaxLength(4000)] public string? KeywordsDisplacementCauses        { get; set; }
-        [MaxLength(8000)] public string? KeywordsPriorityNeeds             { get; set; }
-        [MaxLength(4000)] public string? KeywordsSecurityIncidents         { get; set; }
-        [MaxLength(8000)] public string? KeywordsAllChallenges             { get; set; } // union
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsMarketChallenges { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsHealthDiseases { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsEducationChallenges { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsTransportChallenges { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsFinancialChallenges { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsNaturalFeatures { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsTelecomChallenges { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsSecurityIssues { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsDisputeResolution { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsDisplacementCauses { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsPriorityNeeds { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsSecurityIncidents { get; set; }
+
+        [Column(TypeName = "TEXT")]
+        public string? KeywordsAllChallenges { get; set; }
+        // [MaxLength(4000)] public string? KeywordsMarketChallenges          { get; set; }
+        // [MaxLength(4000)] public string? KeywordsHealthDiseases            { get; set; }
+        // [MaxLength(4000)] public string? KeywordsEducationChallenges       { get; set; }
+        // [MaxLength(4000)] public string? KeywordsTransportChallenges       { get; set; }
+        // [MaxLength(4000)] public string? KeywordsFinancialChallenges       { get; set; }
+        // [MaxLength(4000)] public string? KeywordsNaturalFeatures           { get; set; }
+        // [MaxLength(4000)] public string? KeywordsTelecomChallenges         { get; set; }
+        // [MaxLength(4000)] public string? KeywordsSecurityIssues            { get; set; }
+        // [MaxLength(4000)] public string? KeywordsDisputeResolution         { get; set; }
+        // [MaxLength(4000)] public string? KeywordsDisplacementCauses        { get; set; }
+        // [MaxLength(8000)] public string? KeywordsPriorityNeeds             { get; set; }
+        // [MaxLength(4000)] public string? KeywordsSecurityIncidents         { get; set; }
+        // [MaxLength(8000)] public string? KeywordsAllChallenges             { get; set; } // union
     }
 }

@@ -104,8 +104,8 @@ namespace BenueCommunityMapping.Models.Geography
         public bool IsActive { get; set; } = true;
 
         // FK to Kindred
-        public int KindredId { get; set; }
-        public Kindred Kindred { get; set; } = null!;
+        public int? KindredId { get; set; }
+        public Kindred? Kindred { get; set; }
 
         // Computed convenience navigation (read-only for queries)
         [NotMapped]

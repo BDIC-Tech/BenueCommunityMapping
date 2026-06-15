@@ -16,11 +16,46 @@
           </span>
         </div>
         <div class="col-md-3"><small class="text-muted d-block">Members Fled?</small><strong>@(Model.MembersHadToSleepInBushOrFlee ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Nearby Communities Destroyed?</small><strong>@(Model.NearbyCommunitiesCompletelyDestroyed ? "Yes" : "No")</strong></div>
         <div class="col-md-3"><small class="text-muted d-block">GBV Due to Displacement?</small><strong>@(Model.WomenAndGirlsExposedToGBV ? "Yes" : "No")</strong></div>
         <div class="col-md-3"><small class="text-muted d-block">Est. IDPs Outside Camps</small><strong>@(Model.EstimatedIDPsOutsideCamps?.ToString() ?? "–")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Public Power Supply Hours</small><strong>@(Model.PublicPowerSupplyHours?.ToString() ?? "–")</strong></div>
         <div class="col-md-6"><small class="text-muted d-block">Most Common Dispute Resolution</small><strong>@(Model.MostCommonDisputeResolution?.ToString() ?? "–")</strong></div>
-        <div class="col-md-6"><small class="text-muted d-block">How Community Resolves Disputes</small><span>@(Model.HowCommunityResolvesDisputes ?? "–")</span></div>
+        <div class="col-md-12"><small class="text-muted d-block">How Community Resolves Disputes</small><span>@(Model.HowCommunityResolvesDisputes ?? "–")</span></div>
       </div>
+
+<p class="section-divider mt-2">Security Issues of Concern</p>
+       <div class="d-flex flex-wrap gap-2 mb-3">
+         @if(Model.SecIssueNone) { <span class="badge bg-success">None</span> }
+         @if(Model.SecIssueFarmerHerder) { <span class="badge bg-danger">Farmer-Herder Conflict</span> }
+         @if(Model.SecIssueCommunalCrisis) { <span class="badge bg-danger">Communal Crisis</span> }
+         @if(Model.SecIssueBanditry) { <span class="badge bg-danger">Banditry/Kidnapping</span> }
+         @if(Model.SecIssueTensionWithOps) { <span class="badge bg-warning text-dark">Tension with Security Operatives</span> }
+         @if(Model.SecIssueTheft) { <span class="badge bg-warning text-dark">Theft</span> }
+         @if(Model.SecIssueYouthRestiveness) { <span class="badge bg-warning text-dark">Youth Restiveness</span> }
+         @if(Model.SecIssueArmedRobbery) { <span class="badge bg-danger">Armed Robbery</span> }
+         @if(Model.SecIssueCultism) { <span class="badge bg-danger">Cultism</span> }
+         @if(!string.IsNullOrEmpty(Model.OtherSecurityIssue)) { <span class="badge bg-secondary">Others: @Model.OtherSecurityIssue</span> }
+       </div>
+
+<p class="section-divider">Dispute Resolution Methods</p>
+       <div class="d-flex flex-wrap gap-2 mb-3">
+         @if(Model.DispResTraditionalLeaders) { <span class="badge bg-info text-dark">Traditional Leaders</span> }
+         @if(Model.DispResReligiousLeaders) { <span class="badge bg-info text-dark">Religious Leaders</span> }
+         @if(Model.DispResLocalGovt) { <span class="badge bg-info text-dark">Local Government</span> }
+         @if(Model.DispResCourts) { <span class="badge bg-info text-dark">Courts</span> }
+         @if(Model.DispResADR) { <span class="badge bg-info text-dark">Alternative Dispute Resolution (ADR)</span> }
+         @if(!string.IsNullOrEmpty(Model.OtherDisputeResolution)) { <span class="badge bg-secondary">Others: @Model.OtherDisputeResolution</span> }
+       </div>
+
+<p class="section-divider">Main Causes of Displacement</p>
+       <div class="d-flex flex-wrap gap-2 mb-3">
+         @if(Model.DisplacementCauseFarmerHerder) { <span class="badge bg-danger">Farmer/Herder Crisis</span> }
+         @if(Model.DisplacementCauseArmedConflict) { <span class="badge bg-danger">Armed Conflict</span> }
+         @if(Model.DisplacementCauseFlooding) { <span class="badge bg-warning text-dark">Flooding</span> }
+         @if(Model.DisplacementCauseCommunalViolence) { <span class="badge bg-danger">Communal Violence</span> }
+         @if(!string.IsNullOrEmpty(Model.OtherDisplacementCause)) { <span class="badge bg-secondary">Others: @Model.OtherDisplacementCause</span> }
+       </div>
       @if (Model.SecurityServices.Any(s => s.NumberFrequentlyAvailable > 0))
       {
         <p class="section-divider">Security Services</p>
@@ -37,6 +72,27 @@
                   <td>@(ss.CommunityPerception?.ToString() ?? "–")</td>
                   <td>@(ss.PermanentlyStationed.HasValue ? (ss.PermanentlyStationed.Value ? "Yes" : "No") : "–")</td>
                   <td>@(ss.AverageResponseTime?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.SecurityProgrammes.Any())
+      {
+        <p class="section-divider">Security Programmes</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Operatives</th><th>Main Activity</th><th>Role of Community</th><th>Perception</th></tr></thead>
+            <tbody>
+              @foreach (var sp in Model.SecurityProgrammes)
+              {
+                <tr>
+                  <td>@(sp.Name ?? "–")</td>
+                  <td>@(sp.NumberOfOperatives?.ToString() ?? "–")</td>
+                  <td>@(sp.MainActivity ?? "–")</td>
+                  <td>@(sp.CommunityRole?.ToString() ?? "–")</td>
+                  <td>@(sp.CommunityPerception?.ToString() ?? "–")</td>
                 </tr>
               }
             </tbody>
@@ -98,6 +154,27 @@
                   <td>@(v.NumberOfPeople?.ToString("N0") ?? "–")</td>
                   <td>@(v.HasAccessToSpecialServices.HasValue ? (v.HasAccessToSpecialServices.Value ? "Yes" : "No") : "–")</td>
                   <td>@(v.CommunityNeedsMoreSupport.HasValue ? (v.CommunityNeedsMoreSupport.Value ? "Yes" : "No") : "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (Model.SocialProtections.Any(sp => sp.Available == true))
+      {
+        <p class="section-divider">Social Protection Services</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Type</th><th>Provider</th><th>Year Started</th><th>Makes Difference?</th><th>Adequate?</th></tr></thead>
+            <tbody>
+              @foreach (var sp in Model.SocialProtections.Where(x => x.Available == true))
+              {
+                <tr>
+                  <td>@sp.Type</td>
+                  <td>@(sp.Provider ?? "–")</td>
+                  <td>@(sp.YearStarted?.ToString() ?? "–")</td>
+                  <td>@(sp.MakesRealDifference.HasValue ? (sp.MakesRealDifference.Value ? "Yes" : "No") : "–")</td>
+                  <td>@(sp.CommunityFindsAdequate.HasValue ? (sp.CommunityFindsAdequate.Value ? "Yes" : "No") : "–")</td>
                 </tr>
               }
             </tbody>

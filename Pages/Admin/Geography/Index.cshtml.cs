@@ -48,9 +48,13 @@ namespace BenueCommunityMapping.Pages.Admin.Geography
                 .ToDictionaryAsync(g => g.Key, g => g.Count());
             KindredCounts   = await _db.Kindreds.GroupBy(k => k.WardId)
                 .ToDictionaryAsync(g => g.Key, g => g.Count());
-            CommunityCounts = await _db.Communities.GroupBy(c => c.KindredId)
+            CommunityCounts = await _db.Communities
+                .Where(c => c.KindredId != null)
+                .GroupBy(c => c.KindredId!.Value)
                 .ToDictionaryAsync(g => g.Key, g => g.Count());
-            SubmissionCounts = await _db.Submissions.GroupBy(s => s.CommunityId)
+            SubmissionCounts = await _db.Submissions
+                .Where(s => s.CommunityId != null)
+                .GroupBy(s => s.CommunityId!.Value)
                 .ToDictionaryAsync(g => g.Key, g => g.Count());
         }
 

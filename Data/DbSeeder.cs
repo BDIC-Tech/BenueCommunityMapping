@@ -15,7 +15,7 @@ namespace BenueCommunityMapping.Data
             var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var log     = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
 
-            await db.Database.EnsureCreatedAsync();
+            await db.Database.MigrateAsync();
 
             // ── Roles ──────────────────────────────────────────────────
             foreach (var role in AppRoles.All)

@@ -8,21 +8,35 @@
   </h2>
   <div id="collapseC" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
     <div class="accordion-body bg-white border border-top-0 rounded-bottom">
+
       <div class="row g-2 mb-3">
-        <div class="col-md-3"><small class="text-muted d-block">Ambulance / Referral</small><strong>@(Model.FunctionalAmbulanceOrReferral ? "Yes" : "No")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Childbirth Deaths (2 yrs)</small><strong>@(Model.WomenDiedDuringChildbirthLast2Years ? "Yes" : "No")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Night Emergency Transport</small><strong>@(Model.PregnantWomenCanAccessEmergencyTransportAtNight ? "Yes" : "No")</strong></div>
-        <div class="col-md-9"><small class="text-muted d-block">Major Diseases</small><span>@(Model.MajorDiseasesReported ?? "–")</span></div>
+        <div class="col-md-3"><small class="text-muted d-block">Functional ambulance or transport?</small><strong>@(Model.FunctionalAmbulanceOrReferral ? "Yes" : "No")</strong></div>
+        <div class="col-md-3"><small class="text-muted d-block">Childbirth deaths (2 yrs)</small><strong>@(Model.WomenDiedDuringChildbirthLast2Years ? "Yes" : "No")</strong></div>
+        @if (Model.WomenDiedDuringChildbirthLast2Years && Model.WomenDiedDuringChildbirthLast2YearsCount.HasValue)
+        {
+          <div class="col-md-2"><small class="text-muted d-block">If Yes, how many?</small><strong>@Model.WomenDiedDuringChildbirthLast2YearsCount</strong></div>
+        }
+        @if (Model.PregnantWomenDiedBeforeChildbirthLast2Years && Model.PregnantWomenDiedBeforeChildbirthLast2YearsCount.HasValue)
+        {
+          <div class="col-md-2"><small class="text-muted d-block">Pregnant women died (2 yrs)</small><strong>@Model.PregnantWomenDiedBeforeChildbirthLast2YearsCount</strong></div>
+        }
+        @if (Model.ChildrenUnder5DiedLast2Years && Model.ChildrenUnder5DiedLast2YearsCount.HasValue)
+        {
+          <div class="col-md-2"><small class="text-muted d-block">Children under 5 died (2 yrs)</small><strong>@Model.ChildrenUnder5DiedLast2YearsCount</strong></div>
+        }
+        <div class="col-md-4"><small class="text-muted d-block">Emergency transport at night?</small><strong>@(Model.PregnantWomenCanAccessEmergencyTransportAtNight ? "Yes" : "No")</strong></div>
+        <div class="col-md-9"><small class="text-muted d-block">Major diseases commonly reported</small><span>@(Model.MajorDiseasesReported ?? "–")</span></div>
         @if (!string.IsNullOrEmpty(Model.NearestHealthFacilityIfNone))
         {
-          <div class="col-12"><small class="text-muted">Nearest Facility (no community facility):</small> @Model.NearestHealthFacilityIfNone</div>
+          <div class="col-12"><small class="text-muted">If there is no health facility in your community, what is the distance to the nearest one:</small> @Model.NearestHealthFacilityIfNone</div>
         }
       </div>
       @if (Model.HealthFacilities.Any())
       {
+        <p class="section-divider">7. Please provide details of health facilities available in your community using the table below:</p>
         <div class="table-responsive">
           <table class="bsbs-table">
-            <thead><tr><th>Name</th><th>Type</th><th>Distance</th><th>Staff</th><th>Infrastructure</th><th>Service</th><th>Essential Drugs</th><th>IDPs?</th></tr></thead>
+            <thead><tr><th>Name</th><th>Type</th><th>Distance</th><th>Staff</th><th>Infrastructure</th><th>Service</th><th>Work Quality</th><th>Essential Drugs</th><th>IDPs?</th></tr></thead>
             <tbody>
               @foreach (var f in Model.HealthFacilities)
               {
@@ -32,6 +46,7 @@
                   <td>@(f.HealthcareStaffAvailability?.ToString() ?? "–")</td>
                   <td>@(f.InfrastructureCondition?.ToString() ?? "–")</td>
                   <td>@(f.ServiceDeliveryCondition?.ToString() ?? "–")</td>
+                  <td>@(f.InfrastructureWorkQuality?.ToString() ?? "–")</td>
                   <td>@(f.EssentialDrugsAvailability?.ToString() ?? "–")</td>
                   <td>@(f.IDPsAllowedWithoutDiscrimination.HasValue ? (f.IDPsAllowedWithoutDiscrimination.Value ? "Yes" : "No") : "–")</td>
                 </tr>
@@ -40,7 +55,32 @@
           </table>
         </div>
       }
-      else { <p class="text-muted">No health facilities recorded.</p> }
+      @if (Model.OtherHealthFacilities.Any())
+      {
+        <p class="section-divider">9. Please provide details of other types of facilities available in your community using the table below:</p>
+        <div class="table-responsive">
+          <table class="bsbs-table">
+            <thead><tr><th>Name</th><th>Type</th><th>Distance</th><th>Staff</th><th>Infrastructure</th><th>Service</th><th>Work Quality</th></tr></thead>
+            <tbody>
+              @foreach (var f in Model.OtherHealthFacilities)
+              {
+                <tr>
+                  <td>@(f.Name ?? "–")</td><td>@(f.Type?.ToString() ?? "–")</td>
+                  <td>@(f.DistanceFromCentre?.ToString() ?? "–")</td>
+                  <td>@(f.StaffAvailability?.ToString() ?? "–")</td>
+                  <td>@(f.InfrastructureCondition?.ToString() ?? "–")</td>
+                  <td>@(f.ServiceDeliveryCondition?.ToString() ?? "–")</td>
+                  <td>@(f.InfrastructureWorkQuality?.ToString() ?? "–")</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      @if (!Model.HealthFacilities.Any() && !Model.OtherHealthFacilities.Any())
+      {
+        <p class="text-muted">No health facilities recorded.</p>
+      }
     </div>
   </div>
 </div>

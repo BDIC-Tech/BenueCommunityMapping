@@ -1,68 +1,37 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
 <div class="row g-3 mb-3">
-  <div class="col-md-4"><label class="form-label">General Security Situation</label>
+  @* ── Q1. General security situation ── *@
+  <div class="col-md-4"><label class="form-label">1. General security situation of the community:</label>
     <select name="SectionJ.GeneralSecuritySituation" class="form-select">
       <option value="">– Select –</option>
       @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.SecuritySituation>())
       { <option value="@v" selected="@(Model.GeneralSecuritySituation==v)">@v.ToDisplayText()</option> }
     </select></div>
-  <div class="col-md-8"><label class="form-label">Security Issues (tick all)</label>
-    <div class="d-flex flex-wrap gap-2 mt-1">
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueFarmerHerderConflict" value="true" checked="@Model.SecIssueFarmerHerder" id="secFarmer"><label class="form-check-label" for="secFarmer">Farmer-Herder</label></div>
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueCommunalCrisis"        value="true" checked="@Model.SecIssueCommunalCrisis"        id="secCommunal"><label class="form-check-label" for="secCommunal">Communal Crisis</label></div>
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueBanditryKidnapping"    value="true" checked="@Model.SecIssueBanditry"    id="secBandit"><label class="form-check-label" for="secBandit">Banditry/Kidnapping</label></div>
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueTheft"                  value="true" checked="@Model.SecIssueTheft"                  id="secTheft"><label class="form-check-label" for="secTheft">Theft</label></div>
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueArmedRobbery"           value="true" checked="@Model.SecIssueArmedRobbery"           id="secArmed"><label class="form-check-label" for="secArmed">Armed Robbery</label></div>
-      <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueCultism"                value="true" checked="@Model.SecIssueCultism"                id="secCult"><label class="form-check-label" for="secCult">Cultism</label></div>
-    </div>
-  </div>
-  <div class="col-md-6"><label class="form-label">Members Had to Sleep in Bush or Flee?</label>
-    <select name="SectionJ.MembersHadToSleepInBushOrFlee" class="form-select">
-      <option value="false" selected="@(!Model.MembersHadToSleepInBushOrFlee)">No</option>
-      <option value="true"  selected="@(Model.MembersHadToSleepInBushOrFlee)">Yes</option>
-    </select></div>
-  <div class="col-md-6"><label class="form-label">Nearby Communities Completely Destroyed?</label>
-    <select name="SectionJ.NearbyCommunitiesCompletelyDestroyed" class="form-select">
-      <option value="false" selected="@(!Model.NearbyCommunitiesCompletelyDestroyed)">No</option>
-      <option value="true"  selected="@(Model.NearbyCommunitiesCompletelyDestroyed)">Yes</option>
-    </select></div>
-  <div class="col-12"><label class="form-label mb-1">Dispute Resolution Methods Used (tick all)</label>
-    <div class="d-flex flex-wrap gap-3">
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionTraditionalLeaders"         value="true" checked="@Model.DispResTraditionalLeaders" id="drTrad"><label class="form-check-label" for="drTrad">Traditional Leaders</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionReligiousLeaders"          value="true" checked="@Model.DispResReligiousLeaders"   id="drRel"><label class="form-check-label" for="drRel">Religious Leaders</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionLocalGovernment"           value="true" checked="@Model.DispResLocalGovt"          id="drLg"><label class="form-check-label" for="drLg">Local Government</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionCourts"                   value="true" checked="@Model.DispResCourts"             id="drCourts"><label class="form-check-label" for="drCourts">Courts</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionAlternativeDisputeResolution" value="true" checked="@Model.DispResADR"           id="drADR"><label class="form-check-label" for="drADR">ADR</label></div>
-    </div>
-  </div>
-  <div class="col-12"><label class="form-label mb-1">Main Causes of Displacement (tick all)</label>
-    <div class="d-flex flex-wrap gap-3">
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseFarmerHerderCrisis" value="true" checked="@Model.DisplacementCauseFarmerHerder" id="dcFH"><label class="form-check-label" for="dcFH">Farmer-Herder Crisis</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseArmedConflict"    value="true" checked="@Model.DisplacementCauseArmedConflict" id="dcAC"><label class="form-check-label" for="dcAC">Armed Conflict</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseFlooding"        value="true" checked="@Model.DisplacementCauseFlooding"       id="dcFl"><label class="form-check-label" for="dcFl">Flooding</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseCommunalViolence" value="true" checked="@Model.DisplacementCauseCommunalViolence" id="dcCV"><label class="form-check-label" for="dcCV">Communal Violence</label></div>
-    </div>
-  </div>
-  <div class="col-md-6"><label class="form-label">Women &amp; Girls Exposed to GBV?</label>
-    <select name="SectionJ.WomenAndGirlsExposedToGBVDueToDisplacement" class="form-select">
-      <option value="false" selected="@(!Model.WomenAndGirlsExposedToGBV)">No</option>
-      <option value="true"  selected="@(Model.WomenAndGirlsExposedToGBV)">Yes</option>
-    </select></div>
-  <div class="col-md-6"><label class="form-label">Most Common Dispute Resolution</label>
-    <select name="SectionJ.MostCommonDisputeResolution" class="form-select">
-      <option value="">– Select –</option>
-      @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DisputeResolutionMethod>())
-      { <option value="@v" selected="@(Model.MostCommonDisputeResolution==v)">@v.ToDisplayText()</option> }
-    </select></div>
-  <div class="col-md-6"><label class="form-label">Est. IDPs in Host Community (outside camps)</label>
-    <input type="number" name="SectionJ.EstimatedIDPsInHostCommunityOutsideCamps" class="form-control" value="@Model.EstimatedIDPsOutsideCamps" min="0"/></div>
+  @* ── Q2. Security issues ── *@
+  <div class="col-md-8"><label class="form-label">2. Security issues of concern (tick all that apply):</label>
+     <div class="d-flex flex-wrap gap-2 mt-1">
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueFarmerHerderConflict" value="true" checked="@Model.SecIssueFarmerHerder" id="secFarmer"><label class="form-check-label" for="secFarmer">Farmer-Herder</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueCommunalCrisis"        value="true" checked="@Model.SecIssueCommunalCrisis"        id="secCommunal"><label class="form-check-label" for="secCommunal">Communal Crisis</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueBanditryKidnapping"    value="true" checked="@Model.SecIssueBanditry"    id="secBandit"><label class="form-check-label" for="secBandit">Banditry/Kidnapping</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueTheft"                  value="true" checked="@Model.SecIssueTheft"                  id="secTheft"><label class="form-check-label" for="secTheft">Theft</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueArmedRobbery"           value="true" checked="@Model.SecIssueArmedRobbery"           id="secArmed"><label class="form-check-label" for="secArmed">Armed Robbery</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueCultism"                value="true" checked="@Model.SecIssueCultism"                id="secCult"><label class="form-check-label" for="secCult">Cultism</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueTensionWithOps" value="true" checked="@Model.SecIssueTensionWithOps" id="secTension"><label class="form-check-label" for="secTension">Tension with Ops</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueYouthRestiveness" value="true" checked="@Model.SecIssueYouthRestiveness" id="secYouth"><label class="form-check-label" for="secYouth">Youth Restiveness</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.SecurityIssueNone" value="true" checked="@Model.SecIssueNone" id="secNone"><label class="form-check-label" for="secNone">None</label></div>
+       <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="SectionJ.OtherSecurityIssue" value="true" checked="@(Model.OtherSecurityIssue != null)" id="secOther" onchange="document.getElementById('secOtherSpec').style.display = this.checked ? 'block' : 'none'"><label class="form-check-label" for="secOther">Others (specify)</label></div>
+     </div>
+     <div class="col-12 mt-2" id="secOtherSpec" style="display:@(Model.OtherSecurityIssue != null ? "block" : "none")">
+       <input type="text" name="SectionJ.OtherSecurityIssue" value="@Model.OtherSecurityIssue" class="form-control" placeholder="Please specify..." />
+     </div>
+   </div>
 </div>
 
-<p class="section-divider">Security Services</p>
+<p class="section-divider">Please provide details of security services available in your community using the table below:</p>
 <div class="table-responsive mb-3">
   <table class="dyn-table"><thead><tr>
-    <th>Type</th><th>No. Available</th><th>Post Type</th><th>Perception</th>
-    <th>Need More?</th><th>Permanently Stationed?</th><th>Avg Response Time</th>
+    <th>Types of security</th><th>Number of security operatives frequently available</th><th>Do they have a security post? [Security post, Security station, Security patrol, Occasional visit]</th><th>Community perception of their impact [Positive, Neutral, Negative]</th>
+    <th>Does the community need more of its operatives? [Yes, No]</th><th>Are security operatives permanently stationed here? [Yes, No]</th><th>Average response time during attacks or emergencies: [&lt; 30 mins, 1–2 hrs, &gt; 2 hrs, No response]</th>
   </tr></thead>
   <tbody>
     @foreach (var st in Enum.GetValues<BenueCommunityMapping.Models.Survey.SecurityServiceType>())
@@ -82,7 +51,243 @@
   </tbody></table>
 </div>
 
-<p class="section-divider">Q17. Migrant/Settler Business or Development Activities</p>
+@* ── Q4. How community resolves disputes ── *@
+<div class="row g-3 mb-3 mt-2">
+  <div class="col-12"><label class="form-label mb-1">4. How does your community resolve disputes among members (Please tick all that apply)?</label>
+     <div class="d-flex flex-wrap gap-3">
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionTraditionalLeaders"         value="true" checked="@Model.DispResTraditionalLeaders" id="drTrad"><label class="form-check-label" for="drTrad">Traditional Leaders</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionReligiousLeaders"          value="true" checked="@Model.DispResReligiousLeaders"   id="drRel"><label class="form-check-label" for="drRel">Religious Leaders</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionLocalGovernment"           value="true" checked="@Model.DispResLocalGovt"          id="drLg"><label class="form-check-label" for="drLg">Local Government</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionCourts"                   value="true" checked="@Model.DispResCourts"             id="drCourts"><label class="form-check-label" for="drCourts">Courts</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisputeResolutionAlternativeDisputeResolution" value="true" checked="@Model.DispResADR"           id="drADR"><label class="form-check-label" for="drADR">Alternative Dispute Resolution System</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.OtherDisputeResolution" value="true" checked="@(Model.OtherDisputeResolution != null)" id="drOther" onchange="document.getElementById('drOtherSpec').style.display = this.checked ? 'block' : 'none'"><label class="form-check-label" for="drOther">Others (Specify)</label></div>
+     </div>
+     <div class="col-12 mt-2" id="drOtherSpec" style="display:@(Model.OtherDisputeResolution != null ? "block" : "none")">
+       <input type="text" name="SectionJ.OtherDisputeResolution" value="@Model.OtherDisputeResolution" class="form-control" placeholder="Please specify..." />
+     </div>
+  </div>
+  @* ── Q5. Most common dispute resolution ── *@
+  <div class="col-md-6"><label class="form-label">5. Which of these dispute resolutions is the most common?</label>
+    <select name="SectionJ.MostCommonDisputeResolution" class="form-select">
+      <option value="">– Select –</option>
+      @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DisputeResolutionMethod>())
+      { <option value="@v" selected="@(Model.MostCommonDisputeResolution==v)">@v.ToDisplayText()</option> }
+    </select></div>
+</div>
+
+<p class="section-divider">Please provide details of vulnerable groups living in your community using the table below:</p>
+<div class="table-responsive mb-3">
+  <table class="dyn-table"><thead><tr>
+    <th>Types of vulnerability</th><th>Number of people in this category</th><th>Do they have access to the special services they need? [Yes, No]</th>
+    <th>Community perception of their presence [Too many, Manageable]</th><th>Does the community need more support to care for them? [Yes, No]</th>
+  </tr></thead>
+  <tbody>
+    @foreach (var vt in Enum.GetValues<BenueCommunityMapping.Models.Survey.VulnerabilityType>())
+    {
+      var v = Model.VulnerableGroups.FirstOrDefault(x => x.Type == vt);
+      var pfx = $"SectionJ.Vuln.{vt}";
+      <tr>
+        <td style="font-weight:600;color:var(--bsbs-green);white-space:nowrap">@vt.ToDisplayText()</td>
+        <td><input type="number" name="@(pfx).Number" value="@(v?.NumberOfPeople)" min="0" class="form-control" style="min-width:60px"/></td>
+        <td><select name="@(pfx).Access" class="form-select"><option value="">–</option><option value="true" selected="@(v?.HasAccessToSpecialServices==true)">Yes</option><option value="false" selected="@(v?.HasAccessToSpecialServices==false)">No</option></select></td>
+        <td><select name="@(pfx).Perception" class="form-select"><option value="">–</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityPresencePerception>()){<option value="@c" selected="@(v?.CommunityPerceptionOfPresence==c)">@c.ToDisplayText()</option>}</select></td>
+        <td><select name="@(pfx).NeedsSupport" class="form-select"><option value="">–</option><option value="true" selected="@(v?.CommunityNeedsMoreSupport==true)">Yes</option><option value="false" selected="@(v?.CommunityNeedsMoreSupport==false)">No</option></select></td>
+      </tr>
+    }
+  </tbody></table>
+</div>
+
+@* ── Q7–Q9. Scalar questions after vulnerable groups table ── *@
+<div class="row g-3 mb-3 mt-2">
+  <div class="col-md-6"><label class="form-label">7. Have members of your community had to sleep in the bush or flee to other communities due to fear?</label>
+    <select name="SectionJ.MembersHadToSleepInBushOrFlee" class="form-select">
+      <option value="false" selected="@(!Model.MembersHadToSleepInBushOrFlee)">No</option>
+      <option value="true"  selected="@(Model.MembersHadToSleepInBushOrFlee)">Yes</option>
+    </select></div>
+  <div class="col-md-6"><label class="form-label">8. Have any communities near your community been completely abandoned?</label>
+    <select name="SectionJ.NearbyCommunitiesCompletelyDestroyed" class="form-select">
+      <option value="false" selected="@(!Model.NearbyCommunitiesCompletelyDestroyed)">No</option>
+      <option value="true"  selected="@(Model.NearbyCommunitiesCompletelyDestroyed)">Yes</option>
+    </select></div>
+  <div class="col-md-6"><label class="form-label">9. Are women and girls exposed to Gender-Based Violence and abuse in your community due to displacement?</label>
+    <select name="SectionJ.WomenAndGirlsExposedToGBVDueToDisplacement" class="form-select">
+      <option value="false" selected="@(!Model.WomenAndGirlsExposedToGBV)">No</option>
+      <option value="true"  selected="@(Model.WomenAndGirlsExposedToGBV)">Yes</option>
+    </select></div>
+</div>
+
+<p class="section-divider">Please provide details of social protection services available in your community using the table below:</p>
+<div class="table-responsive mb-3">
+  <table class="dyn-table"><thead><tr>
+    <th>Types of social protection</th><th>Available in your community? [Yes, No]</th><th>Who provides it?</th><th>When (Year) did it start?</th>
+    <th>Does it make a real difference for your community? [Yes, No]</th><th>Does the community find this program adequate? [Yes, No]</th><th>Do IDPs benefit from this service? [Yes, No]</th>
+  </tr></thead>
+  <tbody>
+    @foreach (var spt in Enum.GetValues<BenueCommunityMapping.Models.Survey.SocialProtectionType>())
+    {
+      var sp = Model.SocialProtections.FirstOrDefault(x => x.Type == spt);
+      var pfx = $"SectionJ.SocProt.{spt}";
+      <tr>
+        <td style="font-weight:600;color:var(--bsbs-green);white-space:nowrap">@spt.ToDisplayText()</td>
+        <td><select name="@(pfx).Available" class="form-select"><option value="">–</option><option value="true" selected="@(sp?.Available==true)">Yes</option><option value="false" selected="@(sp?.Available==false)">No</option></select></td>
+        <td><input type="text" name="@(pfx).Provider" value="@(sp?.Provider)" class="form-control"/></td>
+        <td><input type="number" name="@(pfx).YearStarted" value="@(sp?.YearStarted)" class="form-control" style="min-width:80px"/></td>
+        <td><select name="@(pfx).MakesDifference" class="form-select"><option value="">–</option><option value="true" selected="@(sp?.MakesRealDifference==true)">Yes</option><option value="false" selected="@(sp?.MakesRealDifference==false)">No</option></select></td>
+        <td><select name="@(pfx).Adequate" class="form-select"><option value="">–</option><option value="true" selected="@(sp?.CommunityFindsAdequate==true)">Yes</option><option value="false" selected="@(sp?.CommunityFindsAdequate==false)">No</option></select></td>
+        <td><select name="@(pfx).IDPsBenefit" class="form-select"><option value="">–</option><option value="true" selected="@(sp?.IDPsBenefit==true)">Yes</option><option value="false" selected="@(sp?.IDPsBenefit==false)">No</option></select></td>
+      </tr>
+    }
+  </tbody></table>
+</div>
+
+<p class="section-divider">Please provide details of security programmes available in your community using the table below:</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead>
+      <tr>
+        <th>Name of security programme</th><th>Number of operatives in the programme</th><th>Main activity of the programme</th><th>Role of community in the programme [Lead role, Supportive role, None]</th>
+        <th>Community perception of their impact [Positive, Neutral, Negative]</th><th>Does your community need more security operatives for this programme? [Yes, No]</th><th style="width:50px"></th>
+      </tr>
+    </thead>
+    <tbody id="secProgBody">
+      @{ int spi = 0; }
+      @foreach (var sp in Model.SecurityProgrammes)
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.SecProg[@spi].Name" value="@sp.Name" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.SecProg[@spi].Number" value="@sp.NumberOfOperatives" class="form-control" style="min-width:60px"/></td>
+          <td><input type="text" name="SectionJ.SecProg[@spi].Activity" value="@sp.MainActivity" class="form-control"/></td>
+          <td><select name="SectionJ.SecProg[@spi].Role" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityRoleInProgramme>()){<option value="@c" selected="@(sp.CommunityRole==c)">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.SecProg[@spi].Perception" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityPerceptionRating>()){<option value="@c" selected="@(sp.CommunityPerception==c)">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.SecProg[@spi].NeedsMore" class="form-select"><option value="">-</option><option value="true" selected="@(sp.CommunityNeedsMoreOperatives==true)">Yes</option><option value="false" selected="@(sp.CommunityNeedsMoreOperatives==false)">No</option></select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        spi++;
+      }
+      @if (!Model.SecurityProgrammes.Any())
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.SecProg[0].Name" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.SecProg[0].Number" class="form-control" style="min-width:60px"/></td>
+          <td><input type="text" name="SectionJ.SecProg[0].Activity" class="form-control"/></td>
+          <td><select name="SectionJ.SecProg[0].Role" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityRoleInProgramme>()){<option value="@c">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.SecProg[0].Perception" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityPerceptionRating>()){<option value="@c">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.SecProg[0].NeedsMore" class="form-select"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('secProgBody')"><i class="bi bi-plus-circle me-1"></i>Add Security Programme</button>
+
+<p class="section-divider mt-3">Please provide details of past major security incidents in your community using the table below (list as many as you can, as far back as you can):</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead>
+      <tr>
+        <th>Security incident</th><th>Who or what caused it?</th><th>When (Year) did it happen?</th><th>Is it still impacting the community today? [Yes, No]</th>
+        <th>When (Year) were there any efforts to address the challenge?</th><th>Who made those efforts?</th><th>What help does the community need to address this challenge?</th><th style="width:50px"></th>
+      </tr>
+    </thead>
+    <tbody id="secIncBody">
+      @{ int sii = 0; }
+      @foreach (var si in Model.SecurityIncidents)
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.SecInc[@sii].Incident" value="@si.Incident" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.SecInc[@sii].Cause" value="@si.Cause" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.SecInc[@sii].YearOccurred" value="@si.YearOccurred" class="form-control" style="min-width:80px"/></td>
+          <td><select name="SectionJ.SecInc[@sii].StillImpacting" class="form-select"><option value="">-</option><option value="true" selected="@(si.StillImpactingCommunity==true)">Yes</option><option value="false" selected="@(si.StillImpactingCommunity==false)">No</option></select></td>
+          <td><input type="number" name="SectionJ.SecInc[@sii].YearEfforts" value="@si.YearEffortsToAddress" class="form-control" style="min-width:80px"/></td>
+          <td><input type="text" name="SectionJ.SecInc[@sii].WhoMadeEfforts" value="@si.WhoMadeEfforts" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.SecInc[@sii].HelpNeeded" value="@si.HelpNeeded" class="form-control"/></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        sii++;
+      }
+      @if (!Model.SecurityIncidents.Any())
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.SecInc[0].Incident" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.SecInc[0].Cause" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.SecInc[0].YearOccurred" class="form-control" style="min-width:80px"/></td>
+          <td><select name="SectionJ.SecInc[0].StillImpacting" class="form-select"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><input type="number" name="SectionJ.SecInc[0].YearEfforts" class="form-control" style="min-width:80px"/></td>
+          <td><input type="text" name="SectionJ.SecInc[0].WhoMadeEfforts" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.SecInc[0].HelpNeeded" class="form-control"/></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('secIncBody')"><i class="bi bi-plus-circle me-1"></i>Add Security Incident</button>
+
+<p class="section-divider mt-3">Please provide details of the IDP situation in your community using the table below:</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead>
+      <tr>
+        <th>Name of IDP Camp</th><th>Location</th><th>Number of IDP Households living in the camp</th><th>Living conditions in the camp [Good, Moderate, Poor]</th>
+        <th>Is the camp large enough to house all the IDPs in your community? [Yes, No]</th><th>Does the community consider the security in the camp adequate? [Yes, No]</th><th>Are women and girls exposed to Gender-Based Violence and abuse in this camp? [Yes, No]</th><th>How is the relationship between IDPs here and the host community? [Cordial, Neutral, Not cordial]</th><th style="width:50px"></th>
+      </tr>
+    </thead>
+    <tbody id="idpCampBody">
+      @{ int ici = 0; }
+      @foreach (var ic in Model.IDPCamps)
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.IDPCamp[@ici].Name" value="@ic.Name" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.IDPCamp[@ici].Location" value="@ic.Location" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.IDPCamp[@ici].Households" value="@ic.NumberOfIDPHouseholds" class="form-control" style="min-width:60px"/></td>
+          <td><select name="SectionJ.IDPCamp[@ici].Conditions" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.GeneralRating>()){<option value="@c" selected="@(ic.LivingConditions==c)">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.IDPCamp[@ici].LargeEnough" class="form-select"><option value="">-</option><option value="true" selected="@(ic.CampLargeEnough==true)">Yes</option><option value="false" selected="@(ic.CampLargeEnough==false)">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[@ici].SecurityAdequate" class="form-select"><option value="">-</option><option value="true" selected="@(ic.SecurityInCampAdequate==true)">Yes</option><option value="false" selected="@(ic.SecurityInCampAdequate==false)">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[@ici].GBV" class="form-select"><option value="">-</option><option value="true" selected="@(ic.WomenAndGirlsExposedToGBV==true)">Yes</option><option value="false" selected="@(ic.WomenAndGirlsExposedToGBV==false)">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[@ici].Relationship" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityRelationship>()){<option value="@c" selected="@(ic.RelationshipWithHostCommunity==c)">@c.ToDisplayText()</option>}</select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        ici++;
+      }
+      @if (!Model.IDPCamps.Any())
+      {
+        <tr>
+          <td><input type="text" name="SectionJ.IDPCamp[0].Name" class="form-control"/></td>
+          <td><input type="text" name="SectionJ.IDPCamp[0].Location" class="form-control"/></td>
+          <td><input type="number" name="SectionJ.IDPCamp[0].Households" class="form-control" style="min-width:60px"/></td>
+          <td><select name="SectionJ.IDPCamp[0].Conditions" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.GeneralRating>()){<option value="@c">@c.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionJ.IDPCamp[0].LargeEnough" class="form-select"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[0].SecurityAdequate" class="form-select"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[0].GBV" class="form-select"><option value="">-</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><select name="SectionJ.IDPCamp[0].Relationship" class="form-select"><option value="">-</option>@foreach(var c in Enum.GetValues<BenueCommunityMapping.Models.Survey.CommunityRelationship>()){<option value="@c">@c.ToDisplayText()</option>}</select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('idpCampBody')"><i class="bi bi-plus-circle me-1"></i>Add IDP Camp</button>
+
+@* ── Q14–Q15. Scalar questions after IDP table ── *@
+<div class="row g-3 mb-3 mt-2">
+  <div class="col-md-6"><label class="form-label">14. Estimated number of individual IDPs living within the host community (outside the IDP camps):</label>
+    <input type="number" name="SectionJ.EstimatedIDPsInHostCommunityOutsideCamps" class="form-control" value="@Model.EstimatedIDPsOutsideCamps" min="0"/></div>
+  <div class="col-12"><label class="form-label mb-1">15. Main reasons for displacement in your community (tick all that apply):</label>
+     <div class="d-flex flex-wrap gap-3">
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseFarmerHerderCrisis" value="true" checked="@Model.DisplacementCauseFarmerHerder" id="dcFH"><label class="form-check-label" for="dcFH">Farmer-Herder Crisis</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseArmedConflict"    value="true" checked="@Model.DisplacementCauseArmedConflict"    id="dcAC"><label class="form-check-label" for="dcAC">Armed Conflict</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseFlooding"        value="true" checked="@Model.DisplacementCauseFlooding"       id="dcFl"><label class="form-check-label" for="dcFl">Flooding</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.DisplacementCauseCommunalViolence" value="true" checked="@Model.DisplacementCauseCommunalViolence" id="dcCV"><label class="form-check-label" for="dcCV">Communal Violence</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionJ.OtherDisplacementCause" value="true" checked="@(Model.OtherDisplacementCause != null)" id="dcOther" onchange="document.getElementById('dcOtherSpec').style.display = this.checked ? 'block' : 'none'"><label class="form-check-label" for="dcOther">Others (specify)</label></div>
+     </div>
+     <div class="col-12 mt-2" id="dcOtherSpec" style="display:@(Model.OtherDisplacementCause != null ? "block" : "none")">
+       <input type="text" name="SectionJ.OtherDisplacementCause" value="@Model.OtherDisplacementCause" class="form-control" placeholder="Please specify..." />
+     </div>
+  </div>
+</div>
+
+<p class="section-divider mt-3">Please provide details of Migrants'/Settlers' development activities in your community using the table below:</p>
 <div class="table-responsive mb-2">
   <table class="dyn-table">
     <thead>
@@ -132,6 +337,21 @@
 <button type="button" class="btn-add-row" onclick="addRow('migrantBody')">
   <i class="bi bi-plus-circle me-1"></i>Add Migrant/Settler Activity
 </button>
+
+<p class="section-divider mt-3">Q17. Public Power Supply Hours</p>
+<div class="row g-3 mb-3">
+  <div class="col-md-12"><label class="form-label">How many hours of public power supply does your community enjoy in a day?</label>
+    <div class="d-flex flex-wrap gap-3">
+      @foreach (var pps in Enum.GetValues<BenueCommunityMapping.Models.Survey.PublicPowerSupplyHours>())
+      {
+          <div class="form-check">
+              <input class="form-check-input" type="radio" name="SectionJ.PublicPowerSupplyHours" id="pps_@pps" value="@pps" @(Model.PublicPowerSupplyHours == pps ? "checked" : "")>
+              <label class="form-check-label" for="pps_@pps">@pps.ToDisplayText()</label>
+          </div>
+      }
+    </div>
+  </div>
+</div>
 
 <p class="section-divider">Q18. Main Source of Electricity</p>
 <div class="row g-3 mb-3">
@@ -195,3 +415,10 @@
 <button type="button" class="btn-add-row" onclick="addRow('ngoBody')">
   <i class="bi bi-plus-circle me-1"></i>Add NGO
 </button>
+
+<p class="section-divider mt-3">Community Dispute Resolution</p>
+<div class="row g-3 mb-3">
+  <div class="col-12"><label class="form-label">How do you resolve disputes in your community?</label>
+    <textarea name="SectionJ.HowCommunityResolvesDisputes" class="form-control" rows="3">@Model.HowCommunityResolvesDisputes</textarea>
+  </div>
+</div>

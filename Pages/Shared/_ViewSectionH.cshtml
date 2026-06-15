@@ -8,15 +8,12 @@
   </h2>
   <div id="collapseH" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
     <div class="accordion-body bg-white border border-top-0 rounded-bottom">
-      <div class="mb-2">
-        <small class="text-muted">Ethnic/Religious Tensions Caused Conflict?</small>
-        <strong class="ms-2">@(Model.ReligiousOrEthnicTensionsCausedConflict ? "Yes" : "No")</strong>
-      </div>
+
       @if (Model.ReligiousGroups.Any())
       {
-        <div class="table-responsive">
+        <div class="table-responsive mb-3">
           <table class="bsbs-table">
-            <thead><tr><th>Type</th><th>No. Existing</th><th>Est. Members</th><th>Leaders in Peacebuilding?</th><th>No Longer in Use</th></tr></thead>
+            <thead><tr><th>Type</th><th>No. Existing</th><th>Est. Members</th><th>Leaders in Peacebuilding?</th><th>No Longer in Use</th><th>Name (Other)</th></tr></thead>
             <tbody>
               @foreach (var g in Model.ReligiousGroups)
               {
@@ -26,6 +23,7 @@
                   <td>@(g.EstimatedMembershipPopulation?.ToString("N0") ?? "–")</td>
                   <td>@(g.LeadersActivelyParticipateInPeaceBuilding.HasValue ? (g.LeadersActivelyParticipateInPeaceBuilding.Value ? "Yes" : "No") : "–")</td>
                   <td>@(g.NumberNoLongerInUseOrDestroyed?.ToString() ?? "–")</td>
+                  <td>@(g.Name ?? "–")</td>
                 </tr>
               }
             </tbody>
@@ -33,6 +31,22 @@
         </div>
       }
       else { <p class="text-muted">No religious group data recorded.</p> }
+
+      <p class="section-divider mt-2">Challenges to Religion</p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        @if(Model.IntoleranceThreatensReligion) { <span class="badge bg-warning">Intolerance</span> }
+        @if(Model.ExtremismThreatensReligion) { <span class="badge bg-warning">Extremism</span> }
+        @if(Model.DiscriminationThreatensReligion) { <span class="badge bg-warning">Discrimination</span> }
+        @if(Model.CrisisThreatensReligion) { <span class="badge bg-warning">Crisis</span> }
+        @if(Model.PoliticalInterferenceThreatensReligion) { <span class="badge bg-warning">Political Interference</span> }
+        @if(Model.NoThreatToReligion) { <span class="badge bg-success">None</span> }
+        @if(!string.IsNullOrEmpty(Model.OtherReligiousThreat)) { <span class="badge bg-secondary">Others: @Model.OtherReligiousThreat</span> }
+      </div>
+
+      <div class="mb-2">
+        <small class="text-muted">Ethnic/Religious Tensions Caused Conflict?</small>
+        <strong class="ms-2">@(Model.ReligiousOrEthnicTensionsCausedConflict ? "Yes" : "No")</strong>
+      </div>
     </div>
   </div>
 </div>

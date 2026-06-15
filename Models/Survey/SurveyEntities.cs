@@ -43,6 +43,7 @@ namespace BenueCommunityMapping.Models.Survey
         public InfrastructureCondition? InfrastructureCondition  { get; set; }
         [MaxLength(200)] public string? MostActiveTimeOfYear     { get; set; }
         public bool? WomenAndYouthMajorParticipants              { get; set; }
+        public bool? OperatesAtNight                             { get; set; }
     }
 
     // ──────────────────────────────────────────────────────────────────
@@ -61,11 +62,11 @@ namespace BenueCommunityMapping.Models.Survey
         public DistanceCategory?         DistanceFromCentre          { get; set; }
         public StaffAvailability?        HealthcareStaffAvailability { get; set; }
         public InfrastructureCondition?  InfrastructureCondition     { get; set; }
+        public WorkQualityRating?        InfrastructureWorkQuality   { get; set; }
         public ServiceDeliveryCondition? ServiceDeliveryCondition    { get; set; }
         [MaxLength(300)] public string?  WhoBuilt                    { get; set; }
         public int?                      YearEstablished             { get; set; }
         public int?                      YearLastRenovated           { get; set; }
-        public WorkQualityRating?        InfrastructureWorkQuality   { get; set; }
         public bool?                     IDPsAllowedWithoutDiscrimination { get; set; }
         public DrugAvailability?         EssentialDrugsAvailability  { get; set; }
     }
@@ -252,30 +253,32 @@ namespace BenueCommunityMapping.Models.Survey
         public bool ContributesToCharitySocialWelfare               { get; set; }
         public bool ContributesToMoralGuidance                      { get; set; }
         public bool ContributesToRoads                              { get; set; }
-        public bool ContributesToWater                              { get; set; }
-        public bool ContributesToElectricity                        { get; set; }
-        public bool? LeadersActivelyParticipateInPeaceBuilding      { get; set; }
-        [Range(0, int.MaxValue)] public int? NumberNoLongerInUseOrDestroyed { get; set; }
-    }
+public bool ContributesToWater                              { get; set; }
+         public bool ContributesToElectricity                        { get; set; }
+         public bool? LeadersActivelyParticipateInPeaceBuilding      { get; set; }
+         [Range(0, int.MaxValue)] public int? NumberNoLongerInUseOrDestroyed { get; set; }
+         [MaxLength(100)] public string? Name                       { get; set; }
+     }
 
     // ──────────────────────────────────────────────────────────────────
     // SECTION I — TELECOMMUNICATIONS
     // ──────────────────────────────────────────────────────────────────
-    public class GSMNetwork
-    {
-        [Key] public int Id { get; set; }
+public class GSMNetwork
+     {
+         [Key] public int Id { get; set; }
 
-        [Required] public Guid SubmissionId { get; set; }
-        public QuestionnaireSubmission Submission { get; set; } = null!;
+         [Required] public Guid SubmissionId { get; set; }
+         public QuestionnaireSubmission Submission { get; set; } = null!;
 
-        public GSMProvider          Provider                             { get; set; }
-        public NetworkCoverage?     CoverageStrength                    { get; set; }
-        public NetworkAvailability? AvailabilityArea                    { get; set; }
-        public NetworkQuality?      CallAndSMSQuality                   { get; set; }
-        public NetworkQuality?      InternetQuality                     { get; set; }
-        public NetworkGeneration?   NetworkType                         { get; set; }
-        public bool?                AffectedSecurityReportingOrEmergencyCalls { get; set; }
-    }
+         public GSMProvider          Provider                             { get; set; }
+         public NetworkCoverage?     CoverageStrength                    { get; set; }
+         public NetworkAvailability? AvailabilityArea                    { get; set; }
+         public NetworkQuality?      CallAndSMSQuality                   { get; set; }
+         public NetworkQuality?      InternetQuality                     { get; set; }
+         public NetworkGeneration?   NetworkType                         { get; set; }
+         public bool?                AffectedSecurityReportingOrEmergencyCalls { get; set; }
+         [MaxLength(100)] public string? OtherProviderName               { get; set; }
+     }
 
     // ──────────────────────────────────────────────────────────────────
     // SECTION J — SECURITY & SOCIAL PROTECTION
@@ -491,4 +494,5 @@ namespace BenueCommunityMapping.Models.Survey
     public enum SocialProtectionType       { CashTransfer, FoodDistribution, SchoolFeedingProgram, LabourIntensivePublicWorkfare, EarlyWarningEarlyResponse, HealthInsurance, Sensitisation, SocialPension, SubsidizedFertilizer, SubsidizedSeeds, LandClearing, OrphanSupport, WidowSupport, DisabilitySupport, Others }
     public enum DisputeResolutionMethod    { TraditionalLeaders, ReligiousLeaders, LocalGovernment, Courts, AlternativeDisputeResolution, Other }
     public enum CommunityRelationship      { Cordial, Neutral, NotCordial }
+    public enum PublicPowerSupplyHours     { None, LessThan6, SixTo12, MoreThan12 }
 }

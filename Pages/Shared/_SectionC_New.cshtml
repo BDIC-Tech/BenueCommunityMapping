@@ -1,85 +1,143 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
+
+@* ─────────────────────────────────────────────────────────────────────────
+   SECTION C: HEALTHCARE FACILITIES
+   Order follows the paper questionnaire exactly:
+     Q1  – Functional ambulance or patient transport
+     Q2  – Major diseases commonly reported         ← was displaced to bottom
+     Q3  – Women died during childbirth (last 2 yrs) + count
+     Q4  – Pregnant women died before birth (last 2 yrs) + count
+     Q5  – Pregnant women can access emergency transport at night
+     Q6  – Children under 5 died (last 2 yrs) + count
+     Q7  – Health facilities table
+     Q8  – Nearest facility if none in community   ← was displaced before table
+     Q9  – Other facilities table (Pharmacy, Patent Medicine, Mortuary)
+───────────────────────────────────────────────────────────────────────── *@
+
 <div class="row g-3 mb-3">
+
+  @* ── Q1. Functional ambulance ──────────────────────────────────────── *@
   <div class="col-md-6">
-    <label class="form-label">Functional Ambulance / Referral?</label>
+    <label class="form-label">1. Is there a functional ambulance or an easy way to transport patients to another medical facility?</label>
     <select name="SectionC.FunctionalAmbulanceOrReferral" class="form-select">
       <option value="false" selected="@(!Model.FunctionalAmbulanceOrReferral)">No</option>
       <option value="true"  selected="@(Model.FunctionalAmbulanceOrReferral)">Yes</option>
     </select>
   </div>
+
+  @* ── Q2. Major diseases (correct position: second question) ────────── *@
   <div class="col-md-6">
-    <label class="form-label">Women Died in Childbirth (last 2 years)?</label>
-    <select name="SectionC.WomenDiedDuringChildbirthLast2Years" class="form-select">
+    <label class="form-label">2. Major diseases commonly reported in your community:</label>
+    <input name="SectionC.MajorDiseasesReported" class="form-control"
+           value="@Model.MajorDiseasesReported" />
+  </div>
+
+  @* ── Q3. Women died during childbirth ──────────────────────────────── *@
+  <div class="col-md-6">
+    <label class="form-label">3. Have women died during childbirth in your community in the last 2 years?</label>
+    <select name="SectionC.WomenDiedDuringChildbirthLast2Years" class="form-select" id="womenDiedSel">
       <option value="false" selected="@(!Model.WomenDiedDuringChildbirthLast2Years)">No</option>
       <option value="true"  selected="@(Model.WomenDiedDuringChildbirthLast2Years)">Yes</option>
     </select>
   </div>
+  <div class="col-md-6" id="womenDiedCountDiv" style="display:@(Model.WomenDiedDuringChildbirthLast2Years ? "block" : "none")">
+    <label class="form-label">If Yes, how many?</label>
+    <input type="number" name="SectionC.WomenDiedDuringChildbirthLast2YearsCount" class="form-control"
+           value="@Model.WomenDiedDuringChildbirthLast2YearsCount" min="0" />
+  </div>
+
+  @* ── Q4. Pregnant women died before giving birth ───────────────────── *@
   <div class="col-md-6">
-    <label class="form-label">Pregnant Women Can Access Emergency Transport at Night?</label>
+    <label class="form-label">4. Have pregnant women died before they could give birth in your community in the last 2 years?</label>
+    <select name="SectionC.PregnantWomenDiedBeforeChildbirthLast2Years" class="form-select" id="pregWomenDiedSel">
+      <option value="false" selected="@(!Model.PregnantWomenDiedBeforeChildbirthLast2Years)">No</option>
+      <option value="true"  selected="@(Model.PregnantWomenDiedBeforeChildbirthLast2Years)">Yes</option>
+    </select>
+  </div>
+  <div class="col-md-6" id="pregWomenDiedCountDiv" style="display:@(Model.PregnantWomenDiedBeforeChildbirthLast2Years ? "block" : "none")">
+    <label class="form-label">If Yes, how many?</label>
+    <input type="number" name="SectionC.PregnantWomenDiedBeforeChildbirthLast2YearsCount" class="form-control"
+           value="@Model.PregnantWomenDiedBeforeChildbirthLast2YearsCount" min="0" />
+  </div>
+
+  @* ── Q5. Emergency transport at night ─────────────────────────────── *@
+  <div class="col-md-6">
+    <label class="form-label">5. Are pregnant women able to access emergency transport to a medical facility at night?</label>
     <select name="SectionC.PregnantWomenCanAccessEmergencyTransportAtNight" class="form-select">
       <option value="false" selected="@(!Model.PregnantWomenCanAccessEmergencyTransportAtNight)">No</option>
       <option value="true"  selected="@(Model.PregnantWomenCanAccessEmergencyTransportAtNight)">Yes</option>
     </select>
   </div>
-  <div class="col-12">
-    <label class="form-label">Major Diseases Commonly Reported</label>
-    <input name="SectionC.MajorDiseasesReported" class="form-control"
-           value="@Model.MajorDiseasesReported" placeholder="e.g. Malaria, Typhoid, Cholera" />
+
+  @* ── Q6. Children under 5 died ─────────────────────────────────────── *@
+  <div class="col-md-6">
+    <label class="form-label">6. Have any children died at 5 years old or younger in your community in the last 2 years?</label>
+    <select name="SectionC.ChildrenUnder5DiedLast2Years" class="form-select" id="childrenUnder5DiedSel">
+      <option value="false" selected="@(!Model.ChildrenUnder5DiedLast2Years)">No</option>
+      <option value="true"  selected="@(Model.ChildrenUnder5DiedLast2Years)">Yes</option>
+    </select>
   </div>
-  <div class="col-12">
-    <label class="form-label">Nearest Health Facility (if none in community)</label>
-    <input name="SectionC.NearestHealthFacilityIfNoneInCommunity" class="form-control"
-           value="@Model.NearestHealthFacilityIfNone" placeholder="Distance and name" />
+  <div class="col-md-6" id="childrenUnder5DiedCountDiv" style="display:@(Model.ChildrenUnder5DiedLast2Years ? "block" : "none")">
+    <label class="form-label">If Yes, how many?</label>
+    <input type="number" name="SectionC.ChildrenUnder5DiedLast2YearsCount" class="form-control"
+           value="@Model.ChildrenUnder5DiedLast2YearsCount" min="0" />
   </div>
+
 </div>
 
-<p class="section-divider">Health Facilities</p>
+@* ── Q7. Health facilities table ──────────────────────────────────────── *@
+<p class="section-divider">7. Please provide details of health facilities available in your community using the table below:</p>
 <div class="table-responsive mb-2">
   <table class="dyn-table">
     <thead><tr>
-      <th>Name</th><th>Location</th><th>Type</th><th>Distance</th><th>Staff</th>
-      <th>Infrastructure</th><th>Service</th><th>Built By</th><th>Est. Year</th>
-      <th>Renovated</th><th>IDPs Access?</th><th>Essential Drugs</th><th></th>
+      <th>Name of Health Facility</th><th>Location</th><th>Type [Tertiary, General, Primary Health Care (PHC), Private Clinic, Private Hospital, Dispensaries, Traditional Healing Centre]</th><th>Distance from the centre of the community: [&lt; 1km, 1-2 km, &gt; 2 km]</th><th>Availability of healthcare staff: [Adequate, Inadequate]</th>
+      <th>Condition of the Health facility infrastructure [Excellent, Good, Poor]</th><th>Condition of the Health service delivery [Excellent, Good, Poor]</th><th>Who built the health facility?</th><th>When (Year) was it established?</th>
+      <th>When (Year) was it last renovated?</th><th>How would you rate the quality of the work on the infrastructure? [Excellent, Good, Poor]</th><th>Are IDPs allowed to use the health facility without discrimination? [Yes, No]</th><th>Are essential drugs usually available? [Always, Sometimes, Rarely, Never]</th><th></th>
     </tr></thead>
     <tbody id="healthBody">
       @{ int hi = 0; }
       @foreach (var f in Model.HealthFacilities)
       {
         <tr>
-          <td><input name="SectionC.HealthFacilities[@hi].Name" value="@f.Name" /></td>
-          <td><input name="SectionC.HealthFacilities[@hi].Location" value="@f.Location" /></td>
-          <td><select name="SectionC.HealthFacilities[@hi].Type">
+          <td><input name="SectionC.HealthFacilities[@hi].Name" value="@f.Name" class="form-control" /></td>
+          <td><input name="SectionC.HealthFacilities[@hi].Location" value="@f.Location" class="form-control" /></td>
+          <td><select name="SectionC.HealthFacilities[@hi].Type" class="form-select">
             <option value="">–</option>
             @foreach (var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.HealthFacilityType>())
             { <option value="@t" selected="@(f.Type == t)">@t.ToDisplayText()</option> }
           </select></td>
-          <td><select name="SectionC.HealthFacilities[@hi].DistanceFromCentre">
+          <td><select name="SectionC.HealthFacilities[@hi].DistanceFromCentre" class="form-select">
             <option value="">–</option>
             @foreach (var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>())
             { <option value="@d" selected="@(f.DistanceFromCentre == d)">@d.ToDisplayText()</option> }
           </select></td>
-          <td><select name="SectionC.HealthFacilities[@hi].HealthcareStaffAvailability">
+          <td><select name="SectionC.HealthFacilities[@hi].HealthcareStaffAvailability" class="form-select">
             <option value="">–</option>
             @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>())
             { <option value="@v" selected="@(f.HealthcareStaffAvailability == v)">@v.ToDisplayText()</option> }
           </select></td>
-          <td><select name="SectionC.HealthFacilities[@hi].InfrastructureCondition">
+          <td><select name="SectionC.HealthFacilities[@hi].InfrastructureCondition" class="form-select">
             <option value="">–</option>
             @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>())
             { <option value="@v" selected="@(f.InfrastructureCondition == v)">@v.ToDisplayText()</option> }
           </select></td>
-          <td><select name="SectionC.HealthFacilities[@hi].ServiceDeliveryCondition">
+          <td><select name="SectionC.HealthFacilities[@hi].ServiceDeliveryCondition" class="form-select">
             <option value="">–</option>
             @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>())
             { <option value="@v" selected="@(f.ServiceDeliveryCondition == v)">@v.ToDisplayText()</option> }
           </select></td>
-          <td><input name="SectionC.HealthFacilities[@hi].WhoBuilt" value="@f.WhoBuilt" placeholder="Builder" /></td>
-          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearEstablished" value="@f.YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
-          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearLastRenovated" value="@f.YearLastRenovated" placeholder="YYYY" style="min-width:70px" /></td>
-          <td><select name="SectionC.HealthFacilities[@hi].IDPsAllowedWithoutDiscrimination">
+          <td><input name="SectionC.HealthFacilities[@hi].WhoBuilt" value="@f.WhoBuilt" class="form-control" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearEstablished" value="@f.YearEstablished" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[@hi].YearLastRenovated" value="@f.YearLastRenovated" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><select name="SectionC.HealthFacilities[@hi].InfrastructureWorkQuality" class="form-select">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>())
+            { <option value="@v" selected="@(f.InfrastructureWorkQuality == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.HealthFacilities[@hi].IDPsAllowedWithoutDiscrimination" class="form-select">
             <option value="">–</option><option value="true" selected="@(f.IDPsAllowedWithoutDiscrimination == true)">Yes</option><option value="false" selected="@(f.IDPsAllowedWithoutDiscrimination == false)">No</option>
           </select></td>
-          <td><select name="SectionC.HealthFacilities[@hi].EssentialDrugsAvailability">
+          <td><select name="SectionC.HealthFacilities[@hi].EssentialDrugsAvailability" class="form-select">
             <option value="">–</option>
             @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrugAvailability>())
             { <option value="@v" selected="@(f.EssentialDrugsAvailability == v)">@v.ToDisplayText()</option> }
@@ -91,18 +149,19 @@
       @if (!Model.HealthFacilities.Any())
       {
         <tr>
-          <td><input name="SectionC.HealthFacilities[0].Name" /></td>
-          <td><input name="SectionC.HealthFacilities[0].Location" /></td>
-          <td><select name="SectionC.HealthFacilities[0].Type"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.HealthFacilityType>()){<option value="@t">@t.ToDisplayText()</option>}</select></td>
-          <td><select name="SectionC.HealthFacilities[0].DistanceFromCentre"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d">@d.ToDisplayText()</option>}</select></td>
-          <td><select name="SectionC.HealthFacilities[0].HealthcareStaffAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-          <td><select name="SectionC.HealthFacilities[0].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-          <td><select name="SectionC.HealthFacilities[0].ServiceDeliveryCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-          <td><input name="SectionC.HealthFacilities[0].WhoBuilt" placeholder="Builder" /></td>
-          <td><input type="number" name="SectionC.HealthFacilities[0].YearEstablished" placeholder="YYYY" style="min-width:70px" /></td>
-          <td><input type="number" name="SectionC.HealthFacilities[0].YearLastRenovated" placeholder="YYYY" style="min-width:70px" /></td>
-          <td><select name="SectionC.HealthFacilities[0].IDPsAllowedWithoutDiscrimination"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
-          <td><select name="SectionC.HealthFacilities[0].EssentialDrugsAvailability"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrugAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionC.HealthFacilities[0].Name" class="form-control" /></td>
+          <td><input name="SectionC.HealthFacilities[0].Location" class="form-control" /></td>
+          <td><select name="SectionC.HealthFacilities[0].Type" class="form-select"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.HealthFacilityType>()){<option value="@t">@t.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].DistanceFromCentre" class="form-select"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d">@d.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].HealthcareStaffAvailability" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].InfrastructureCondition" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].ServiceDeliveryCondition" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionC.HealthFacilities[0].WhoBuilt" class="form-control" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[0].YearEstablished" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><input type="number" name="SectionC.HealthFacilities[0].YearLastRenovated" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><select name="SectionC.HealthFacilities[0].InfrastructureWorkQuality" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.HealthFacilities[0].IDPsAllowedWithoutDiscrimination" class="form-select"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+          <td><select name="SectionC.HealthFacilities[0].EssentialDrugsAvailability" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.DrugAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
           <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
         </tr>
       }
@@ -112,3 +171,101 @@
 <button type="button" class="btn-add-row" onclick="addRow('healthBody')">
   <i class="bi bi-plus-circle me-1"></i>Add Health Facility
 </button>
+
+@* ── Q8. Nearest health facility if none in community (correct position: after Q7 table) ── *@
+<div class="row g-3 mb-3 mt-3">
+  <div class="col-12">
+    <label class="form-label">8. If there is no health facility in your community, what is the distance to the nearest one (Please name the facility)?</label>
+    <input name="SectionC.NearestHealthFacilityIfNoneInCommunity" class="form-control"
+           value="@Model.NearestHealthFacilityIfNone" />
+  </div>
+</div>
+
+@* ── Q9. Other types of facilities table (Pharmacy, Patent Medicine, Mortuary) ── *@
+<p class="section-divider">9. Please provide details of other types of facilities available in your community using the table below:</p>
+<div class="table-responsive mb-2">
+  <table class="dyn-table">
+    <thead><tr>
+      <th>Name of Facility</th><th>Location</th><th>Type of facility [Pharmacy, Patent Medicine Stores, Mortuary]</th><th>Distance from centre of the community: [&lt; 1km, 1-2 km, &gt; 2 km]</th><th>Availability of staff: [Adequate, Inadequate]</th>
+      <th>Condition of the facility infrastructure [Excellent, Good, Poor]</th><th>Condition of the service delivery [Excellent, Good, Poor]</th><th>Who built the facility?</th><th>When (Year) was it established?</th>
+      <th>When (Year) was it last renovated?</th><th>How would you rate the quality of the work on the infrastructure? [Excellent, Good, Poor]</th><th></th>
+    </tr></thead>
+    <tbody id="otherHealthBody">
+      @{ int ohi = 0; }
+      @foreach (var f in Model.OtherHealthFacilities)
+      {
+        <tr>
+          <td><input name="SectionC.OtherHealthFacilities[@ohi].Name" value="@f.Name" class="form-control" /></td>
+          <td><input name="SectionC.OtherHealthFacilities[@ohi].Location" value="@f.Location" class="form-control" /></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].Type" class="form-select">
+            <option value="">–</option>
+            @foreach (var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.OtherFacilityType>())
+            { <option value="@t" selected="@(f.Type == t)">@t.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].DistanceFromCentre" class="form-select">
+            <option value="">–</option>
+            @foreach (var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>())
+            { <option value="@d" selected="@(f.DistanceFromCentre == d)">@d.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].StaffAvailability" class="form-select">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>())
+            { <option value="@v" selected="@(f.StaffAvailability == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].InfrastructureCondition" class="form-select">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>())
+            { <option value="@v" selected="@(f.InfrastructureCondition == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].ServiceDeliveryCondition" class="form-select">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>())
+            { <option value="@v" selected="@(f.ServiceDeliveryCondition == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><input name="SectionC.OtherHealthFacilities[@ohi].WhoBuilt" value="@f.WhoBuilt" class="form-control" /></td>
+          <td><input type="number" name="SectionC.OtherHealthFacilities[@ohi].YearEstablished" value="@f.YearEstablished" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><input type="number" name="SectionC.OtherHealthFacilities[@ohi].YearLastRenovated" value="@f.YearLastRenovated" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><select name="SectionC.OtherHealthFacilities[@ohi].InfrastructureWorkQuality" class="form-select">
+            <option value="">–</option>
+            @foreach (var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>())
+            { <option value="@v" selected="@(f.InfrastructureWorkQuality == v)">@v.ToDisplayText()</option> }
+          </select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+        ohi++;
+      }
+      @if (!Model.OtherHealthFacilities.Any())
+      {
+        <tr>
+          <td><input name="SectionC.OtherHealthFacilities[0].Name" class="form-control" /></td>
+          <td><input name="SectionC.OtherHealthFacilities[0].Location" class="form-control" /></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].Type" class="form-select"><option value="">–</option>@foreach(var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.OtherFacilityType>()){<option value="@t">@t.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].DistanceFromCentre" class="form-select"><option value="">–</option>@foreach(var d in Enum.GetValues<BenueCommunityMapping.Models.Survey.DistanceCategory>()){<option value="@d">@d.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].StaffAvailability" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.StaffAvailability>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].InfrastructureCondition" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].ServiceDeliveryCondition" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.ServiceDeliveryCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><input name="SectionC.OtherHealthFacilities[0].WhoBuilt" class="form-control" /></td>
+          <td><input type="number" name="SectionC.OtherHealthFacilities[0].YearEstablished" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><input type="number" name="SectionC.OtherHealthFacilities[0].YearLastRenovated" placeholder="YYYY" class="form-control" style="min-width:80px" /></td>
+          <td><select name="SectionC.OtherHealthFacilities[0].InfrastructureWorkQuality" class="form-select"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.WorkQualityRating>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+          <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<button type="button" class="btn-add-row" onclick="addRow('otherHealthBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Other Facility
+</button>
+
+<script>
+  document.getElementById('womenDiedSel')?.addEventListener('change', function(){
+    document.getElementById('womenDiedCountDiv').style.display = this.value==='true'?'block':'none';
+  });
+  document.getElementById('pregWomenDiedSel')?.addEventListener('change', function(){
+    document.getElementById('pregWomenDiedCountDiv').style.display = this.value==='true'?'block':'none';
+  });
+  document.getElementById('childrenUnder5DiedSel')?.addEventListener('change', function(){
+    document.getElementById('childrenUnder5DiedCountDiv').style.display = this.value==='true'?'block':'none';
+  });
+</script>

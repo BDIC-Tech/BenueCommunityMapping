@@ -1,48 +1,65 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
-<p class="section-divider">GSM Network Coverage</p>
+<p class="section-divider">Please provide details of GSM networks available in your community using the table below:</p>
 <div class="table-responsive mb-3">
   <table class="dyn-table"><thead><tr>
-    <th>Provider</th><th>Coverage</th><th>Availability</th>
-    <th>Call/SMS Quality</th><th>Internet Quality</th><th>Network Type</th><th>Affects Emergencies?</th>
+    <th>Available network providers in the community</th><th>Does this network have coverage in your community? [Strong, Fair, Weak, None]</th><th>Network availability [All parts, Most parts, Few parts]</th>
+    <th>Quality of network for calls and SMS [Stable, Fair, Unstable]</th><th>Quality of network for the internet [Stable, Fair, Unstable]</th><th>Network type [5G, 4G, 3G]</th><th>Has this network's quality affected security reporting or emergency calls? [Yes, No]</th><th></th>
   </tr></thead>
-  <tbody>
-    @{
-      var providers = Enum.GetValues<BenueCommunityMapping.Models.Survey.GSMProvider>();
-      int ii = 0;
-    }
-    @foreach (var prov in providers)
+  <tbody id="gsmBody">
+    @{ int ii = 0; }
+    @foreach (var net in Model.GSMNetworks)
     {
-      var net = Model.GSMNetworks.FirstOrDefault(n => n.Provider == prov) ??
-                new BenueCommunityMapping.Models.Survey.GSMNetwork { Provider = prov };
       <tr>
-        <td style="font-weight:600;color:var(--bsbs-green)">
-          <input type="hidden" name="SectionI.GSMNetworks[@ii].Provider" value="@prov"/>@prov
-        </td>
-        <td><select name="SectionI.GSMNetworks[@ii].CoverageStrength"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkCoverage>()){<option value="@v" selected="@(net.CoverageStrength==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionI.GSMNetworks[@ii].AvailabilityArea"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkAvailability>()){<option value="@v" selected="@(net.AvailabilityArea==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionI.GSMNetworks[@ii].CallAndSMSQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()){<option value="@v" selected="@(net.CallAndSMSQuality==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionI.GSMNetworks[@ii].InternetQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()){<option value="@v" selected="@(net.InternetQuality==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionI.GSMNetworks[@ii].NetworkType"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkGeneration>()){<option value="@v" selected="@(net.NetworkType==v)">@v.ToDisplayText()</option>}</select></td>
+        <td>
+           <select name="SectionI.GSMNetworks[@ii].Provider" onchange="toggleOtherProvider(this)"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.GSMProvider>()) {<option value="@v" selected="@(net.Provider==v)">@v.ToDisplayText()</option>}</select>
+           <input type="text" name="SectionI.GSMNetworks[@ii].OtherProviderName" value="@net.OtherProviderName" placeholder="Specify provider" style="display:@(net.Provider == BenueCommunityMapping.Models.Survey.GSMProvider.Others ? "block" : "none")" class="mt-1"/>
+         </td>
+        <td><select name="SectionI.GSMNetworks[@ii].CoverageStrength"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkCoverage>()) {<option value="@v" selected="@(net.CoverageStrength==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].AvailabilityArea"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkAvailability>()) {<option value="@v" selected="@(net.AvailabilityArea==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].CallAndSMSQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()) {<option value="@v" selected="@(net.CallAndSMSQuality==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].InternetQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()) {<option value="@v" selected="@(net.InternetQuality==v)">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[@ii].NetworkType"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkGeneration>()) {<option value="@v" selected="@(net.NetworkType==v)">@v.ToDisplayText()</option>}</select></td>
         <td><select name="SectionI.GSMNetworks[@ii].AffectedSecurityReportingOrEmergencyCalls"><option value="">–</option><option value="true" selected="@(net.AffectedSecurityReportingOrEmergencyCalls==true)">Yes</option><option value="false" selected="@(net.AffectedSecurityReportingOrEmergencyCalls==false)">No</option></select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
       </tr>
       ii++;
     }
+    @if (!Model.GSMNetworks.Any())
+    {
+      <tr>
+        <td>
+           <select name="SectionI.GSMNetworks[0].Provider" onchange="toggleOtherProvider(this)"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.GSMProvider>()) {<option value="@v">@v.ToDisplayText()</option>}</select>
+           <input type="text" name="SectionI.GSMNetworks[0].OtherProviderName" placeholder="Specify provider" style="display:none" class="mt-1"/>
+         </td>
+        <td><select name="SectionI.GSMNetworks[0].CoverageStrength"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkCoverage>()) {<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[0].AvailabilityArea"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkAvailability>()) {<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[0].CallAndSMSQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()) {<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[0].InternetQuality"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkQuality>()) {<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[0].NetworkType"><option value="">–</option>@foreach(var v in Enum.GetValues<BenueCommunityMapping.Models.Survey.NetworkGeneration>()) {<option value="@v">@v.ToDisplayText()</option>}</select></td>
+        <td><select name="SectionI.GSMNetworks[0].AffectedSecurityReportingOrEmergencyCalls"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+    }
   </tbody></table>
 </div>
+<button type="button" class="btn-add-row" onclick="addRow('gsmBody')">
+  <i class="bi bi-plus-circle me-1"></i>Add Network Provider
+</button>
+
 <div class="row g-3">
-  <div class="col-md-6"><label class="form-label">Main Internet Sources</label>
+   <div class="col-md-6"><label class="form-label">What are the main sources of internet in your community (tick all that apply):</label>
     <div class="d-flex gap-3 mt-1">
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceMobileData"      value="true" checked="@Model.InternetSourceMobileData"      id="iMobile"><label class="form-check-label" for="iMobile">Mobile Data</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceBroadbandFibre"  value="true" checked="@Model.InternetSourceBroadbandFibre"  id="iBroadband"><label class="form-check-label" for="iBroadband">Broadband/Fibre</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InternetSourceSatellite"       value="true" checked="@Model.InternetSourceSatellite"       id="iSat"><label class="form-check-label" for="iSat">Satellite</label></div>
     </div>
   </div>
-  <div class="col-md-6"><label class="form-label">Communication Black Spots?</label>
+  <div class="col-md-6"><label class="form-label">Are there known communication black spots in the community?</label>
     <select name="SectionI.CommunicationBlackSpotsExist" class="form-select">
       <option value="false" selected="@(!Model.CommunicationBlackSpotsExist)">No</option>
       <option value="true"  selected="@(Model.CommunicationBlackSpotsExist)">Yes</option>
     </select></div>
-  <div class="col-12"><label class="form-label">Common Information Channels</label>
+  <div class="col-12"><label class="form-label">Common information channels used by your community (tick all that apply):</label>
     <div class="d-flex flex-wrap gap-3 mt-1">
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelPhoneCallsSMS"     value="true" checked="@Model.InfoChannelPhoneCallsSMS"     id="chPhone"><label class="form-check-label" for="chPhone">Phone/SMS</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelTelevision"        value="true" checked="@Model.InfoChannelTelevision"        id="chTV"><label class="form-check-label" for="chTV">Television</label></div>
@@ -53,6 +70,15 @@
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionI.InfoChannelSocialMedia"       value="true" checked="@Model.InfoChannelSocialMedia"       id="chSocial"><label class="form-check-label" for="chSocial">Social Media</label></div>
     </div>
   </div>
-  <div class="col-12"><label class="form-label">Telecommunication Challenges</label>
+  <div class="col-12"><label class="form-label">Challenges with telecommunication and information access in your community</label>
     <textarea name="SectionI.TelecommunicationChallenges" class="form-control" rows="2">@Model.TelecommunicationChallenges</textarea></div>
 </div>
+<script>
+function toggleOtherProvider(selectEl) {
+  var row = selectEl.closest('tr');
+  var otherInput = row.querySelector('input[name$=".OtherProviderName"]');
+  if (otherInput) {
+    otherInput.style.display = selectEl.value === 'Others' ? 'block' : 'none';
+  }
+}
+</script>

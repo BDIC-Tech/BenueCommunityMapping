@@ -1,42 +1,75 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
+@using BenueCommunityMapping.Models.Survey
 <div class="table-responsive mb-3">
   <table class="dyn-table"><thead><tr>
-    <th>Worship Centre</th><th>Number</th><th>Est. Membership</th>
-    <th>Contributions</th><th>Leaders in Peacebuilding?</th><th>No Longer in Use</th>
+    <th>Religious worship centre type</th>
+    <th>Number existing in the community</th>
+    <th>Estimated Membership population</th>
+    <th>Areas in which they contribute to community development: [Education, Health Services, Peace Building, Charity/Social Welfare, Moral Guidance, Roads, Water, Electricity, None]</th>
+    <th>Do religious leaders actively participate in peacebuilding? [Yes, No]</th>
+    <th>How many are no longer in use or destroyed?</th>
   </tr></thead>
-  <tbody>
-    @{
-  
-    }
-    @foreach (var ct in Enum.GetValues<BenueCommunityMapping.Models.Survey.ReligiousWorshipCentreType>())
-    {
-      var g = Model.ReligiousGroups.FirstOrDefault(x => x.Type == ct);
-      var pfx = $"SectionH.ReligiousGroup.{ct}";
-      <tr>
-        <td style="font-weight:600;color:var(--bsbs-green)">@ct</td>
-        <td><input type="number" name="@(pfx).NumberExisting" value="@(g?.NumberExisting)" min="0" style="min-width:60px"/></td>
-        <td><input type="number" name="@(pfx).EstimatedMembershipPopulation" value="@(g?.EstimatedMembershipPopulation)" min="0" style="min-width:80px"/></td>
-        <td><input name="@(pfx)_Contributions" value="" placeholder="Education, Health, Roads…" style="min-width:200px"/></td>
-        <td><select name="@(pfx).LeadersParticipate"><option value="">–</option><option value="true" selected="@(g?.LeadersActivelyParticipateInPeaceBuilding==true)">Yes</option><option value="false" selected="@(g?.LeadersActivelyParticipateInPeaceBuilding==false)">No</option></select></td>
-        <td><input type="number" name="@(pfx).NumberDestroyed" value="@(g?.NumberNoLongerInUseOrDestroyed)" min="0" style="min-width:60px"/></td>
-      </tr>
-    }
-  </tbody></table>
+<tbody>
+     @{
+   
+     }
+     @foreach (var ct in Enum.GetValues<BenueCommunityMapping.Models.Survey.ReligiousWorshipCentreType>())
+     {
+       var g = Model.ReligiousGroups.FirstOrDefault(x => x.Type == ct);
+       var pfx = $"SectionH.ReligiousGroup.{ct}";
+       <tr>
+         <td style="font-weight:600;color:var(--bsbs-green)">
+           @ct
+           @if (ct == ReligiousWorshipCentreType.Other)
+           {
+             <br /><input name="@(pfx).Name" value="@g?.Name" placeholder="Specify name" class="form-control mt-1" style="min-width:120px"/>
+           }
+         </td>
+         <td><input type="number" name="@(pfx).NumberExisting" value="@(g?.NumberExisting)" min="0" style="min-width:60px"/></td>
+         <td><input type="number" name="@(pfx).EstimatedMembershipPopulation" value="@(g?.EstimatedMembershipPopulation)" min="0" style="min-width:80px"/></td>
+         <td style="min-width:260px">
+           @* Contribution checkboxes mapped to individual model booleans *@
+           <div class="d-flex flex-wrap gap-2">
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToEducation"           value="true" @(g?.ContributesToEducation           == true ? "checked" : "")><label class="form-check-label">Education</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToHealthServices"      value="true" @(g?.ContributesToHealthServices      == true ? "checked" : "")><label class="form-check-label">Health Services</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToPeaceBuilding"       value="true" @(g?.ContributesToPeaceBuilding       == true ? "checked" : "")><label class="form-check-label">Peace Building</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToCharitySocialWelfare" value="true" @(g?.ContributesToCharitySocialWelfare == true ? "checked" : "")><label class="form-check-label">Charity/Social Welfare</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToMoralGuidance"       value="true" @(g?.ContributesToMoralGuidance       == true ? "checked" : "")><label class="form-check-label">Moral Guidance</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToRoads"               value="true" @(g?.ContributesToRoads               == true ? "checked" : "")><label class="form-check-label">Roads</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToWater"               value="true" @(g?.ContributesToWater               == true ? "checked" : "")><label class="form-check-label">Water</label></div>
+             <div class="form-check"><input class="form-check-input" type="checkbox" name="@(pfx).ContributesToElectricity"         value="true" @(g?.ContributesToElectricity         == true ? "checked" : "")><label class="form-check-label">Electricity</label></div>
+           </div>
+         </td>
+         <td><select name="@(pfx).LeadersParticipate"><option value="">–</option><option value="true" selected="@(g?.LeadersActivelyParticipateInPeaceBuilding == true)">Yes</option><option value="false" selected="@(g?.LeadersActivelyParticipateInPeaceBuilding == false)">No</option></select></td>
+         <td><input type="number" name="@(pfx).NumberDestroyed" value="@(g?.NumberNoLongerInUseOrDestroyed)" min="0" style="min-width:60px"/></td>
+       </tr>
+     }
+   </tbody></table>
 </div>
 <div class="row g-3">
-  <div class="col-12"><label class="form-label mb-2">Challenges to Religion (tick all that apply)</label>
-    <div class="d-flex flex-wrap gap-3">
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.IntoleranceThreatensReligion"          value="true" checked="@Model.IntoleranceThreatensReligion"          id="relInt"><label class="form-check-label" for="relInt">Intolerance</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.ExtremismThreatensReligion"            value="true" checked="@Model.ExtremismThreatensReligion"            id="relExt"><label class="form-check-label" for="relExt">Extremism</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.DiscriminationThreatensReligion"      value="true" checked="@Model.DiscriminationThreatensReligion"      id="relDis"><label class="form-check-label" for="relDis">Discrimination</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.CrisisThreatensReligion"              value="true" checked="@Model.CrisisThreatensReligion"              id="relCri"><label class="form-check-label" for="relCri">Crisis</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.PoliticalInterferenceThreatensReligion" value="true" checked="@Model.PoliticalInterferenceThreatensReligion" id="relPol"><label class="form-check-label" for="relPol">Political Interference</label></div>
-      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.NoThreatToReligion"                   value="true" checked="@Model.NoThreatToReligion"                   id="relNone"><label class="form-check-label" for="relNone">None</label></div>
-    </div>
-  </div>
-  <div class="col-md-6"><label class="form-label">Religious/Ethnic Tensions Ever Caused Conflict?</label>
-    <select name="SectionH.ReligiousOrEthnicTensionsCausedConflict" class="form-select">
-      <option value="false" selected="@(!Model.ReligiousOrEthnicTensionsCausedConflict)">No</option>
-      <option value="true"  selected="@(Model.ReligiousOrEthnicTensionsCausedConflict)">Yes</option>
-    </select></div>
-</div>
+   <div class="col-12"><label class="form-label mb-2">What major challenges affect the practice of religion in your community (tick all that apply)?</label>
+     <div class="d-flex flex-wrap gap-3">
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.IntoleranceThreatensReligion"          value="true" checked="@Model.IntoleranceThreatensReligion"          id="relInt"><label class="form-check-label" for="relInt">Intolerance</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.ExtremismThreatensReligion"            value="true" checked="@Model.ExtremismThreatensReligion"            id="relExt"><label class="form-check-label" for="relExt">Extremism</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.DiscriminationThreatensReligion"      value="true" checked="@Model.DiscriminationThreatensReligion"      id="relDis"><label class="form-check-label" for="relDis">Discrimination</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.CrisisThreatensReligion"              value="true" checked="@Model.CrisisThreatensReligion"              id="relCri"><label class="form-check-label" for="relCri">Crisis</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.PoliticalInterferenceThreatensReligion" value="true" checked="@Model.PoliticalInterferenceThreatensReligion" id="relPol"><label class="form-check-label" for="relPol">Political Interference</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.NoThreatToReligion"                   value="true" checked="@Model.NoThreatToReligion"                   id="relNone"><label class="form-check-label" for="relNone">None</label></div>
+       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionH.OtherReligiousThreat"                   value="true" checked="@(Model.OtherReligiousThreat != null)"         id="relOther"><label class="form-check-label" for="relOther">Others (specify):</label></div>
+     </div>
+     <div class="col-12 mt-2" id="otherReligiousThreatDiv" style="display:@(Model.OtherReligiousThreat != null ? "block" : "none")">
+       <input name="SectionH.OtherReligiousThreat" value="@Model.OtherReligiousThreat" class="form-control" placeholder="Please specify..." />
+     </div>
+   </div>
+   <div class="col-md-6"><label class="form-label">Religious/Ethnic Tensions Ever Caused Conflict?</label>
+     <select name="SectionH.ReligiousOrEthnicTensionsCausedConflict" class="form-select">
+       <option value="false" selected="@(!Model.ReligiousOrEthnicTensionsCausedConflict)">No</option>
+       <option value="true"  selected="@(Model.ReligiousOrEthnicTensionsCausedConflict)">Yes</option>
+     </select></div>
+ </div>
+
+ <script>
+   document.getElementById('relOther')?.addEventListener('change', function(){
+     document.getElementById('otherReligiousThreatDiv').style.display = this.checked ? 'block' : 'none';
+   });
+ </script>

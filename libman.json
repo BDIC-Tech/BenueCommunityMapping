@@ -1,0 +1,22 @@
+{
+  "version": "3.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "select2@4.0.13",
+      "destination": "wwwroot/libs/select2/"
+    },
+    {
+      "library": "sweetalert2@11.23.0",
+      "destination": "wwwroot/libs/sweetalert2/"
+    },
+    {
+      "library": "twitter-bootstrap@5.3.8",
+      "destination": "wwwroot/libs/bootstrap/"
+    },
+    {
+      "library": "jquery@3.7.1",
+      "destination": "wwwroot/libs/jquery/"
+    }
+  ]
+}

@@ -193,6 +193,13 @@ namespace BenueCommunityMapping.Services.Analytics
                 new("IDP Camps Recorded",           idpCamps, idpCamps, 0),
                 new("Security Incidents Recorded",  secInc,   secInc,   0),
                 new("Est. IDPs Outside Camps",      idpsOut,  idpsOut,  0),
+                new("Security Programmes Recorded", await _db.SecurityProgrammes.CountAsync(x => ids.Contains(x.SubmissionId)), N, 0),
+                new("Vulnerable Groups Recorded",   await _db.VulnerableGroups.CountAsync(x => ids.Contains(x.SubmissionId) && x.NumberOfPeople > 0), N, 0),
+                new("Social Protections Recorded",  await _db.SocialProtections.CountAsync(x => ids.Contains(x.SubmissionId) && x.Available == true), N, 0),
+                M("Power Supply: < 6 Hours",        await q.CountAsync(s => s.PublicPowerSupplyHours == PublicPowerSupplyHours.LessThan6)),
+                M("Power Supply: 6-12 Hours",       await q.CountAsync(s => s.PublicPowerSupplyHours == PublicPowerSupplyHours.SixTo12)),
+                M("Power Supply: > 12 Hours",       await q.CountAsync(s => s.PublicPowerSupplyHours == PublicPowerSupplyHours.MoreThan12)),
+                M("Power Supply: None",             await q.CountAsync(s => s.PublicPowerSupplyHours == PublicPowerSupplyHours.None)),
                 M("Elec: Public Power",             await q.CountAsync(s => s.ElecSourcePublicPower)),
                 M("Elec: Generators",               await q.CountAsync(s => s.ElecSourceGenerators)),
                 M("Elec: Solar Power",              await q.CountAsync(s => s.ElecSourceSolarPower)),
@@ -901,7 +908,7 @@ namespace BenueCommunityMapping.Services.Analytics
                 .ToListAsync();
 
             return subs.Select(s => new CommunityMetricRow(
-                s.CommunityId,
+                s.CommunityId ?? 0,
                 s.Community?.Name ?? "–",
                 s.Community?.Kindred?.Name ?? "–",
                 s.Community?.Kindred?.Ward?.Name ?? "–",

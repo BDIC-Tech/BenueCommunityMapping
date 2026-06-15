@@ -8,26 +8,36 @@
   </h2>
   <div id="collapseG" class="accordion-collapse collapse" data-bs-parent="#viewAccordion">
     <div class="accordion-body bg-white border border-top-0 rounded-bottom">
-      <div class="row g-2 mb-3">
-        <div class="col-md-3"><small class="text-muted d-block">General Environment</small><strong>@(Model.GeneralEnvironmentalCondition?.ToString() ?? "–")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Farmland Inaccessible?</small><strong>@(Model.FarmlandInaccessibleDueToInsecurity ? $"Yes ({Model.PercentFarmlandAbandoned})" : "No")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Irrigation Present?</small><strong>@(Model.IrrigationSystemsPresent ? "Yes" : "No")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Extension Workers</small><strong>@(Model.NumberOfAgriculturalExtensionWorkers?.ToString() ?? "–")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Land Disputes (IDPs)?</small><strong>@(Model.LandDisputesBetweenIndigenesAndIDPs ? "Yes" : "No")</strong></div>
-        <div class="col-md-3"><small class="text-muted d-block">Tractors / Mechanised?</small><strong>@(Model.AccessToTractorsOrMechanizedFarming ? "Yes" : "No")</strong></div>
-        <div class="col-md-6">
-          <small class="text-muted d-block">Water Sources</small>
-          @{ var water = new List<string>();
-             if(Model.WaterSourceRiverStream) water.Add("River/Stream");
-             if(Model.WaterSourceBorehole) water.Add("Borehole");
-             if(Model.WaterSourceWell) water.Add("Well");
-             if(Model.WaterSourceRainwater) water.Add("Rainwater");
-             if(Model.WaterSourcePipeBorne) water.Add("Pipe-borne");
-          }
-          <span>@(water.Any() ? string.Join(", ", water) : "–")</span>
-        </div>
-        <div class="col-12"><small class="text-muted">Natural Features Challenges:</small> @(Model.NaturalFeaturesChallenges ?? "–")</div>
-      </div>
+       <div class="row g-2 mb-3">
+         <div class="col-md-3"><small class="text-muted d-block">General Environment</small><strong>@(Model.GeneralEnvironmentalCondition?.ToString() ?? "–")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Farmland Inaccessible?</small><strong>@(Model.FarmlandInaccessibleDueToInsecurity ? $"Yes ({Model.PercentFarmlandAbandoned})" : "No")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Irrigation Present?</small><strong>@(Model.IrrigationSystemsPresent ? "Yes" : "No")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Extension Workers</small><strong>@(Model.NumberOfAgriculturalExtensionWorkers?.ToString() ?? "–")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Extension Services</small><strong>@(Model.ExtensionWorkerServices ?? "–")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Land Disputes (IDPs)?</small><strong>@(Model.LandDisputesBetweenIndigenesAndIDPs ? "Yes" : "No")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Tractors / Mechanised?</small><strong>@(Model.AccessToTractorsOrMechanizedFarming ? "Yes" : "No")</strong></div>
+         <div class="col-md-3"><small class="text-muted d-block">Farming Type</small>
+           @{
+             var farming = new List<string>();
+             if(Model.FarmingSubsistence) farming.Add("Subsistence");
+             if(Model.FarmingCommercial) farming.Add("Commercial");
+             if(Model.FarmingBoth) farming.Add("Both");
+           }
+           <span>@(farming.Any() ? string.Join(", ", farming) : "–")</span>
+         </div>
+         <div class="col-md-6">
+           <small class="text-muted d-block">Water Sources</small>
+           @{ var water = new List<string>();
+              if(Model.WaterSourceRiverStream) water.Add("River/Stream");
+              if(Model.WaterSourceBorehole) water.Add("Borehole");
+              if(Model.WaterSourceWell) water.Add("Well");
+              if(Model.WaterSourceRainwater) water.Add("Rainwater");
+              if(Model.WaterSourcePipeBorne) water.Add("Pipe-borne");
+           }
+           <span>@(water.Any() ? string.Join(", ", water) : "–")</span>
+         </div>
+         <div class="col-12"><small class="text-muted">Natural Features Challenges:</small> @(Model.NaturalFeaturesChallenges ?? "–")</div>
+       </div>
       @if (Model.EnvironmentalChallenges.Any())
       {
         <p class="section-divider">Environmental Challenges</p>
@@ -50,21 +60,110 @@
           </table>
         </div>
       }
-      @if (Model.NaturalFeatures.Any())
-      {
-        <p class="section-divider">Natural Features</p>
-        <div class="table-responsive">
-          <table class="bsbs-table">
-            <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Community Use</th></tr></thead>
-            <tbody>
-              @foreach (var n in Model.NaturalFeatures)
-              {
-                <tr><td>@(n.Name ?? "–")</td><td>@(n.Type?.ToString() ?? "–")</td><td>@(n.Location ?? "–")</td><td>@(n.CommunityUse ?? "–")</td></tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
+       @if (Model.NaturalFeatures.Any())
+       {
+         <p class="section-divider">Natural Features</p>
+         <div class="table-responsive">
+           <table class="bsbs-table">
+             <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Community Use</th></tr></thead>
+             <tbody>
+               @foreach (var n in Model.NaturalFeatures)
+               {
+                 <tr><td>@(n.Name ?? "–")</td><td>@(n.Type?.ToString() ?? "–")</td><td>@(n.Location ?? "–")</td><td>@(n.CommunityUse ?? "–")</td></tr>
+               }
+             </tbody>
+           </table>
+         </div>
+       }
+       
+       @if (Model.IndustrialActivities.Any())
+       {
+         <p class="section-divider">Industrial Activities</p>
+         <div class="table-responsive">
+           <table class="bsbs-table">
+             <thead><tr><th>Type</th><th>Location</th><th>Owner</th><th>Finished Products</th><th>Byproducts</th><th>Raw Materials</th><th>Raw Materials Source</th><th>Products Sold Within Community?</th><th>Community Benefits</th></tr></thead>
+             <tbody>
+               @foreach (var ia in Model.IndustrialActivities)
+               {
+                 <tr>
+                   <td>@(ia.ActivityType?.ToString() ?? "–")</td>
+                   <td>@(ia.Location ?? "–")</td>
+                   <td>@(ia.Owner ?? "–")</td>
+                   <td>@(ia.FinishedProducts ?? "–")</td>
+                   <td>@(ia.Byproducts ?? "–")</td>
+                   <td>@(ia.RawMaterials ?? "–")</td>
+                   <td>@(ia.RawMaterialsSourcedFrom ?? "–")</td>
+                   <td>@(ia.ProductsSoldWithinCommunity.HasValue ? (ia.ProductsSoldWithinCommunity.Value ? "Yes" : "No") : "–")</td>
+                   <td>@(ia.CommunityBenefits ?? "–")</td>
+                 </tr>
+               }
+             </tbody>
+           </table>
+         </div>
+       }
+       
+       @if (Model.MiningActivities.Any())
+       {
+         <p class="section-divider">Mining Activities</p>
+         <div class="table-responsive">
+           <table class="bsbs-table">
+             <thead><tr><th>Minerals Being Mined</th><th>Location</th><th>Owner</th><th>Input Materials</th><th>Input Materials Source</th><th>Products Sold Within Community?</th><th>Community Benefits</th><th>Negative Impacts</th></tr></thead>
+             <tbody>
+               @foreach (var ma in Model.MiningActivities)
+               {
+                 <tr>
+                   <td>@(ma.MineralBeingMined ?? "–")</td>
+                   <td>@(ma.Location ?? "–")</td>
+                   <td>@(ma.Owner ?? "–")</td>
+                   <td>@(ma.InputMaterials ?? "–")</td>
+                   <td>@(ma.InputMaterialsSourcedFrom ?? "–")</td>
+                   <td>@(ma.ProductsSoldWithinCommunity.HasValue ? (ma.ProductsSoldWithinCommunity.Value ? "Yes" : "No") : "–")</td>
+                   <td>@(ma.CommunityBenefits ?? "–")</td>
+                   <td>@(ma.NegativeImpacts ?? "–")</td>
+                 </tr>
+               }
+             </tbody>
+           </table>
+         </div>
+       }
+       
+       @if (Model.EnvironmentalChallenges.Any())
+       {
+         <p class="section-divider">Environmental Challenges</p>
+         <div class="table-responsive">
+           <table class="bsbs-table">
+             <thead><tr><th>Challenge</th><th>Frequency</th><th>Time of Year</th><th>Areas Affected</th><th>Severity</th><th>Year Started</th><th>Most Affected</th><th>Interventions?</th><th>Year of Intervention</th><th>Who Intervened</th><th>Helped?</th></tr></thead>
+             <tbody>
+               @foreach (var c in Model.EnvironmentalChallenges.Where(e => e.Frequency != null && e.Frequency != BenueCommunityMapping.Models.Survey.OccurrenceFrequency.None))
+               {
+                 <tr>
+                   <td><strong>@c.ChallengeType</strong></td>
+                   <td>@(c.Frequency?.ToString() ?? "–")</td>
+                   <td>@(c.TimeOfYear ?? "–")</td>
+                   <td>@(c.AreasAffected ?? "–")</td>
+                   <td>@(c.Severity?.ToString() ?? "–")</td>
+                   <td>@(c.YearStarted?.ToString() ?? "–")</td>
+                   <td>@(c.MostAffected ?? "–")</td>
+                   <td>@(c.InterventionsCarriedOut.HasValue ? (c.InterventionsCarriedOut.Value ? "Yes" : "No") : "–")</td>
+                   <td>@(c.YearOfIntervention.HasValue ? c.YearOfIntervention.Value.ToString() : "–")</td>
+                   <td>@(c.WhoIntervened ?? "–")</td>
+                   <td>@(c.InterventionsHelped.HasValue ? (c.InterventionsHelped.Value ? "Yes" : "No") : "–")</td>
+                 </tr>
+               }
+             </tbody>
+           </table>
+         </div>
+       }
+       
+       <p class="section-divider">Environmental Improvement Priorities</p>
+       <div class="row g-2">
+         <div class="col-md-2"><small class="text-muted d-block">Waste Management</small><strong>@(Model.UrgentWasteManagement ? "Yes" : "No")</strong></div>
+         <div class="col-md-2"><small class="text-muted d-block">Drainage</small><strong>@(Model.UrgentDrainage ? "Yes" : "No")</strong></div>
+         <div class="col-md-2"><small class="text-muted d-block">Tree Planting</small><strong>@(Model.UrgentTreePlanting ? "Yes" : "No")</strong></div>
+         <div class="col-md-2"><small class="text-muted d-block">Flood Control</small><strong>@(Model.UrgentFloodControl ? "Yes" : "No")</strong></div>
+         <div class="col-md-2"><small class="text-muted d-block">Pollution Control</small><strong>@(Model.UrgentPollutionControl ? "Yes" : "No")</strong></div>
+         <div class="col-md-2"><small class="text-muted d-block">Others Specified</small><strong>@(Model.OtherUrgentEnvImprovement ?? "–")</strong></div>
+       </div>
     </div>
   </div>
 </div>

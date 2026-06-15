@@ -1,7 +1,19 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
+
+@* ─────────────────────────────────────────────────────────────────────────
+   SECTION E: ACCESS ROADS AND TRANSPORTATION
+   Order follows the paper questionnaire exactly:
+     Q1  – Main access road type
+     Q2  – Transport during rainy season (tick all that apply)
+     Q3  – Transport during dry season (tick all that apply)
+     Q4  – Access roads table
+     Q5  – Transport challenges faced by the community (AFTER table)
+───────────────────────────────────────────────────────────────────────── *@
+
+@* ── Q1–Q3. Scalar questions (before table) ──────────────────────────── *@
 <div class="row g-3 mb-3">
   <div class="col-md-4">
-    <label class="form-label">Main Access Road Type</label>
+    <label class="form-label">1. The main access road to the community is:</label>
     <select name="SectionE.MainAccessRoadType" class="form-select">
       <option value="">– Select –</option>
       @foreach (var t in Enum.GetValues<BenueCommunityMapping.Models.Survey.RoadSurfaceType>())
@@ -9,34 +21,34 @@
     </select>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Rainy Season Transport</label>
+    <label class="form-label">2. Main means of transportation used during the <strong>rainy season</strong> (tick all that apply):</label>
     <div class="d-flex flex-wrap gap-2 mt-1">
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonMotorcycle"  value="true" checked="@Model.RainSeasonMotorcycle"  id="rsMoto"><label class="form-check-label" for="rsMoto">Motorcycle</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonCarBus"      value="true" checked="@Model.RainSeasonCarBus"      id="rsCar"><label class="form-check-label" for="rsCar">Car/Bus</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonTruck"      value="true" checked="@Model.RainSeasonTruck"      id="rsTruck"><label class="form-check-label" for="rsTruck">Truck</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonWalking"    value="true" checked="@Model.RainSeasonWalking"    id="rsWalk"><label class="form-check-label" for="rsWalk">Walking</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.RainSeasonCanoeBoat"  value="true" checked="@Model.RainSeasonCanoeBoat"  id="rsCanoe"><label class="form-check-label" for="rsCanoe">Canoe/Boat</label></div>
     </div>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Dry Season Transport</label>
+    <label class="form-label">3. Main means of transportation used during the <strong>dry season</strong> (tick all that apply):</label>
     <div class="d-flex flex-wrap gap-2 mt-1">
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonMotorcycle"  value="true" checked="@Model.DrySeasonMotorcycle"  id="dsMoto"><label class="form-check-label" for="dsMoto">Motorcycle</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonCarBus"      value="true" checked="@Model.DrySeasonCarBus"      id="dsCar"><label class="form-check-label" for="dsCar">Car/Bus</label></div>
+      <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonTruck"      value="true" checked="@Model.DrySeasonTruck"      id="dsTruck"><label class="form-check-label" for="dsTruck">Truck</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonWalking"    value="true" checked="@Model.DrySeasonWalking"    id="dsWalk"><label class="form-check-label" for="dsWalk">Walking</label></div>
       <div class="form-check"><input class="form-check-input" type="checkbox" name="SectionE.DrySeasonCanoeBoat"  value="true" checked="@Model.DrySeasonCanoeBoat"  id="dsCanoe"><label class="form-check-label" for="dsCanoe">Canoe/Boat</label></div>
     </div>
   </div>
-  <div class="col-12">
-    <label class="form-label">Transport Challenges</label>
-    <textarea name="SectionE.TransportChallenges" class="form-control" rows="2">@Model.TransportChallenges</textarea>
-  </div>
 </div>
-<p class="section-divider">Road Details</p>
+
+@* ── Q4. Access roads table ──────────────────────────────────────────── *@
+<p class="section-divider">Please provide details of the access roads to your community in the table below:</p>
 <div class="table-responsive mb-2">
   <table class="dyn-table"><thead><tr>
-    <th>Road Name</th><th>Rainy</th><th>Dry</th><th>Drainage</th>
-    <th>Built By</th><th>Yr Built</th><th>Renovated</th><th>Quality</th>
-    <th>Months Hard</th><th>Dangers</th><th></th>
+    <th>Access road to the community</th><th>Road condition during the rainy season: [Passable, Difficult, Not passable]</th><th>Road condition during the dry season: [Passable, Difficult, Not passable]</th><th>Presence of drainage system on the road: [Adequate, Inadequate, None]</th>
+    <th>Who built the road?</th><th>When (Year) was it constructed?</th><th>When (Year) was it last renovated?</th><th>How would you rate the quality of the work on the infrastructure? [Excellent, Good, Poor]</th>
+    <th>For how many months in a year is access very difficult on this road?</th><th>Have there been any dangers on this road due to bad road access? [Death, Serious Injury, None]</th><th></th>
   </tr></thead>
   <tbody id="roadsBody">
     @{ int ei = 0; }
@@ -78,3 +90,11 @@
 <button type="button" class="btn-add-row" onclick="addRow('roadsBody')">
   <i class="bi bi-plus-circle me-1"></i>Add Road
 </button>
+
+@* ── Q5. Transport challenges (correct position: AFTER the table) ─────── *@
+<div class="row g-3 mb-3 mt-3">
+  <div class="col-12">
+    <label class="form-label">Transport challenges faced by the community:</label>
+    <textarea name="SectionE.TransportChallenges" class="form-control" rows="2">@Model.TransportChallenges</textarea>
+  </div>
+</div>

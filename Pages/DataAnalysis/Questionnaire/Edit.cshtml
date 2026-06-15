@@ -1,0 +1,293 @@
+@page "{id?}"
+@model BenueCommunityMapping.Pages.DataAnalysis.Questionnaire.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "New Entry" : "Edit Entry";
+    var s = Model.Submission;
+    // Geographic selections from loaded community
+    int selLGA       = s.Community?.Kindred?.Ward?.LocalGovernmentAreaId ?? 0;
+    int selWard      = s.Community?.Kindred?.WardId ?? 0;
+    int selKindred   = s.Community?.KindredId ?? 0;
+}
+@section Sheets{
+    <link href="~/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+}
+
+<div class="page-hero mt-3">
+  <div class="hero-icon"><i class="bi bi-journal-plus"></i></div>
+  <div>
+    <h1>@(Model.IsNew ? "New Questionnaire Entry" : "Edit Entry")</h1>
+    <p>Complete all sections and submit for coordinator review</p>
+  </div>
+  <span class="status-badge status-@s.Status.ToString().ToLower() ms-auto align-self-center">@s.Status</span>
+</div>
+
+<!-- WIZARD TABS -->
+<div class="wizard-steps mb-0" id="wizardTabs">
+  @{
+    var tabs = new[] {
+      ("A","Community ID","bi-geo-alt-fill"), ("B","Markets","bi-shop"),
+      ("C","Healthcare","bi-heart-pulse"),    ("D","Education","bi-mortarboard"),
+      ("E","Roads","bi-signpost-split"),      ("F","Finance","bi-bank2"),
+      ("G","Environment","bi-tree"),          ("H","Religion","bi-people"),
+      ("I","Telecom","bi-wifi"),              ("J","Security","bi-shield"),
+      ("K","Priorities","bi-star"),           ("★","Consent","bi-pen")
+    };
+  }
+  @for (int t = 0; t < tabs.Length; t++)
+  {
+    <div class="wizard-step @(t == 0 ? "active" : "")" data-tab="@t">
+      <span class="step-num">@tabs[t].Item1</span>
+      <span class="d-none d-lg-inline">@tabs[t].Item2</span>
+    </div>
+  }
+</div>
+
+<form method="post" id="qForm">
+  <input type="hidden" name="submissionId" value="@s.Id" />
+
+  <!-- ══ SECTION A ══════════════════════════════════════════════ -->
+  <div class="tab-pane content-card rounded-top-0 active" id="tab-0">
+    <div class="content-card-header"><i class="bi bi-geo-alt-fill"></i><h5>Section A: Community Identification</h5></div>
+    <div class="content-card-body">
+      <div class="info-note"><i class="bi bi-info-circle me-1"></i>
+        Select the geographic context using the cascading dropdowns. Community name is entered as free text (optional).
+      </div>
+
+      <!-- CASCADING GEO SELECTORS -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Local Government Area <span class="required-star">*</span></label>
+          <select id="selLGA" class="form-select" onchange="loadWards(this.value)">
+            <option value="">– Select LGA –</option>
+            @foreach (var lga in Model.LGAs)
+            {
+              <option value="@lga.Id" selected="@(lga.Id == selLGA)">@lga.Name (@lga.Code)</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Ward <span class="required-star">*</span></label>
+          <select id="selWard" class="form-select" onchange="loadKindreds(this.value)" disabled>
+            <option value="">– Select Ward –</option>
+            @foreach (var w in Model.Wards)
+            {
+              <option value="@w.Id" selected="@(w.Id == selWard)">@w.Name (@w.Code)</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Kindred <span class="required-star">*</span></label>
+          <select id="selKindred" name="kindredId" class="form-select" disabled>
+            <option value="">– Select Kindred –</option>
+            @foreach (var k in Model.Kindreds)
+            {
+              <option value="@k.Id" selected="@(k.Id == selKindred)">@k.Name (@k.Code)</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- COMMUNITY NAME (free text, optional) -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Community Name <small class="text-muted">(optional)</small></label>
+          <input type="text" name="communityName" id="communityNameInput" class="form-control"
+                 value="@(s.CommunityName ?? s.Community?.Name)" placeholder="Enter community name" />
+        </div>
+      </div>
+
+      <!-- Geographic info panel -->
+      <div id="communityInfoPanel" class="row g-3" style="display:@(selKindred > 0 ? "flex" : "none")">
+        <div class="col-md-6">
+          <div class="info-note">
+            <i class="bi bi-diagram-3 me-1"></i>
+            <strong>LGA:</strong> <span id="infoLGA">@(s.Community?.Kindred?.Ward?.LocalGovernmentArea?.Name)</span> /
+            <strong>Ward:</strong> <span id="infoWard">@(s.Community?.Kindred?.Ward?.Name)</span> /
+            <strong>Kindred:</strong> <span id="infoKindred">@(s.Community?.Kindred?.Name)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Survey-time scalars -->
+      <div class="row g-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label">Est. Number of Households</label>
+          <input type="number" name="SectionA.EstimatedNumberOfHouseholds" class="form-control"
+                 value="@s.EstimatedNumberOfHouseholds" min="0" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Affected by Farmer–Herder Conflict?</label>
+          <select name="SectionA.AffectedByFarmerHerderConflict" class="form-select" id="conflictSel">
+            <option value="false" selected="@(!s.AffectedByFarmerHerderConflict)">No</option>
+            <option value="true"  selected="@(s.AffectedByFarmerHerderConflict)">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4" id="conflictYearDiv" style="display:@(s.AffectedByFarmerHerderConflict ? "block" : "none")">
+          <label class="form-label">Year Conflict Began</label>
+          <input type="number" name="SectionA.ConflictStartYear" class="form-control"
+                 value="@s.ConflictStartYear" min="1900" max="2099" placeholder="YYYY" />
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Host Community to IDPs?</label>
+          <select name="SectionA.IsHostCommunityToIDPs" class="form-select" id="idpSel">
+            <option value="false" selected="@(!s.IsHostCommunityToIDPs)">No</option>
+            <option value="true"  selected="@(s.IsHostCommunityToIDPs)">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4" id="idpCountDiv" style="display:@(s.IsHostCommunityToIDPs ? "block" : "none")">
+          <label class="form-label">IDP Households Outside Camps</label>
+          <input type="number" name="SectionA.IDPHouseholdsOutsideCamps" class="form-control"
+                 value="@s.IDPHouseholdsOutsideCamps" min="0" />
+        </div>
+         <div class="col-12">
+           <label class="form-label">Major Family Lineages</label>
+           <textarea name="SectionA.MajorFamilyLineages" class="form-control" rows="2">@s.MajorFamilyLineages</textarea>
+         </div>
+         <div class="col-12">
+           <label class="form-label">Major Ethnic Groups</label>
+           <textarea name="SectionA.MajorEthnicGroups" class="form-control" rows="2">@s.MajorEthnicGroups</textarea>
+         </div>
+       </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTIONS B–K use existing partials ══════════════════════ -->
+  <div class="tab-pane content-card rounded-top-0" id="tab-1" style="display:none">
+    <div class="content-card-header"><i class="bi bi-shop"></i><h5>Section B: Markets</h5></div>
+    <div class="content-card-body">@await Html.PartialAsync("_SectionB_New", s)</div>
+  </div>
+
+  @for (int secIdx = 2; secIdx <= 11; secIdx++)
+  {
+    <div class="tab-pane content-card rounded-top-0" id="tab-@secIdx" style="display:none">
+      <div class="content-card-header">
+        <i class="bi @tabs[secIdx].Item3"></i>
+        <h5>Section @tabs[secIdx].Item1: @tabs[secIdx].Item2</h5>
+      </div>
+      <div class="content-card-body">
+        @if (secIdx == 2)  { <partial name="_SectionC_New" model="@s" /> }
+        @if (secIdx == 3)  { <partial name="_SectionD_New" model="@s" /> }
+        @if (secIdx == 4)  { <partial name="_SectionE_New" model="@s" /> }
+        @if (secIdx == 5)  { <partial name="_SectionF_New" model="@s" /> }
+        @if (secIdx == 6)  { <partial name="_SectionG_New" model="@s" /> }
+        @if (secIdx == 7)  { <partial name="_SectionH_New" model="@s" /> }
+        @if (secIdx == 8)  { <partial name="_SectionI_New" model="@s" /> }
+        @if (secIdx == 9)  { <partial name="_SectionJ_New" model="@s" /> }
+        @if (secIdx == 10) { <partial name="_SectionK_New" model="@s" /> }
+        @if (secIdx == 11) { <partial name="_ConsentNew"   model="@s" /> }
+      </div>
+    </div>
+  }
+
+  <!-- ══ WIZARD FOOTER ═══════════════════════════════════════════ -->
+  <div class="wizard-footer">
+    <button type="button" class="btn btn-bsbs-outline" id="btnPrev" onclick="changeTab(-1)" disabled>
+      <i class="bi bi-chevron-left me-1"></i>Previous
+    </button>
+    <button type="button" class="btn btn-bsbs-primary" id="btnNext" onclick="changeTab(1)">
+      Next<i class="bi bi-chevron-right ms-1"></i>
+    </button>
+    <button type="submit" name="action" value="save" class="btn btn-bsbs-outline ms-auto">
+      <i class="bi bi-floppy me-1"></i>Save Draft
+    </button>
+    <button type="submit" name="action" value="submit" id="btnSubmit"
+            class="btn btn-bsbs-gold" style="display:none"
+            onclick="return confirm('Submit for coordinator review?')">
+      <i class="bi bi-send-fill me-1"></i>Submit for Review
+    </button>
+    <span class="text-muted small ms-3" id="tabIndicator">Section 1 of 12</span>
+  </div>
+</form>
+
+@section Scripts {
+    <script src="~/libs/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+const TOTAL = 12;
+let current = 0;
+
+// Tab navigation
+function showTab(n) {
+  document.querySelectorAll('.tab-pane').forEach((p,i) => p.style.display = i===n?'block':'none');
+  document.querySelectorAll('.wizard-step').forEach((s,i) => {
+    s.classList.toggle('active', i===n);
+    if(i<n) s.classList.add('done'); else s.classList.remove('done');
+  });
+  document.getElementById('btnPrev').disabled = n===0;
+  document.getElementById('btnNext').style.display = n===TOTAL-1?'none':'inline-flex';
+  document.getElementById('btnSubmit').style.display = n===TOTAL-1?'inline-flex':'none';
+  document.getElementById('tabIndicator').textContent = `Section ${n+1} of ${TOTAL}`;
+  current = n;
+  window.scrollTo(0,0);
+}
+function changeTab(dir){ showTab(Math.max(0,Math.min(TOTAL-1,current+dir))); }
+document.querySelectorAll('.wizard-step').forEach(el =>
+  el.addEventListener('click',()=>showTab(parseInt(el.dataset.tab))));
+
+// Section A conditionals
+document.getElementById('conflictSel').addEventListener('change',function(){
+  document.getElementById('conflictYearDiv').style.display=this.value==='true'?'block':'none';
+});
+document.getElementById('idpSel').addEventListener('change',function(){
+  document.getElementById('idpCountDiv').style.display=this.value==='true'?'block':'none';
+});
+
+// Cascading dropdown AJAX (LGA → Ward → Kindred only; Community is free text)
+async function loadWards(lgaId) {
+  resetSelect('selWard','– Select Ward –');
+  resetSelect('selKindred','– Select Kindred –');
+  hideCommunityInfo();
+  if (!lgaId) return;
+  const data = await fetchGeo(`/api/geo/wards?lgaId=${lgaId}`);
+  populateSelect('selWard', data, 'wardId', 'name', 'code');
+  document.getElementById('selWard').disabled = false;
+}
+async function loadKindreds(wardId) {
+  resetSelect('selKindred','– Select Kindred –');
+  hideCommunityInfo();
+  if (!wardId) return;
+  const data = await fetchGeo(`/api/geo/kindreds?wardId=${wardId}`);
+  populateSelect('selKindred', data, 'kindredId', 'name', 'code');
+  document.getElementById('selKindred').disabled = false;
+  showGeoInfo();
+}
+function showGeoInfo() {
+  const lgaSel  = document.getElementById('selLGA');
+  const wardSel = document.getElementById('selWard');
+  const kindSel = document.getElementById('selKindred');
+  document.getElementById('infoLGA').textContent  = lgaSel.options[lgaSel.selectedIndex]?.text.split('(')[0].trim() || '';
+  document.getElementById('infoWard').textContent = wardSel.options[wardSel.selectedIndex]?.text.split('(')[0].trim() || '';
+  document.getElementById('infoKindred').textContent = kindSel.options[kindSel.selectedIndex]?.text.split('(')[0].trim() || '';
+  document.getElementById('communityInfoPanel').style.display = 'flex';
+}
+function hideCommunityInfo(){ document.getElementById('communityInfoPanel').style.display='none'; }
+function resetSelect(id, label) {
+  const s = document.getElementById(id);
+  s.innerHTML = `<option value="">${label}</option>`;
+  s.disabled = true;
+}
+function populateSelect(id, items, idKey, nameKey, codeKey) {
+  const s = document.getElementById(id);
+  items.forEach(i => {
+    const o = new Option(`${i[nameKey]} (${i[codeKey]})`, i[idKey]);
+    s.appendChild(o);
+  });
+  s.disabled = false;
+}
+async function fetchGeo(url) {
+  try { const r = await fetch(url); return r.ok ? await r.json() : []; }
+  catch { return []; }
+}
+
+// Init – if editing existing submission with geographic data already set
+window.addEventListener('DOMContentLoaded', () => {
+  const lgaId = document.getElementById('selLGA').value;
+  const wardId = '@selWard';
+  const kindredId = '@selKindred';
+  if (lgaId && wardId && wardId !== '0') {
+    document.getElementById('selWard').disabled = false;
+    document.getElementById('selKindred').disabled = false;
+    showGeoInfo();
+  }
+});
+</script>
+}

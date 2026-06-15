@@ -137,6 +137,7 @@ namespace BenueCommunityMapping.Services
             };
             _db.Submissions.Add(submission);
             await _db.SaveChangesAsync();
+            _db.Entry(submission).State = EntityState.Detached;
             return submission;
         }
 
@@ -181,15 +182,20 @@ namespace BenueCommunityMapping.Services
 
                 // Detach navigation properties to avoid tracking conflicts
                 // (the ApplicationUser may already be tracked by Identity's UserManager).
-                // Foreign-key columns (AgentId, CoordinatorId, CommunityId) are preserved.
+                // Foreign-key columns (AgentId, CoordinatorId, CommunityId) are preserved explicitly.
+                var preservedAgentId = submission.AgentId;
+                var preservedCoordId = submission.CoordinatorId;
+                var preservedCommId  = submission.CommunityId;
+
                 submission.Agent       = null!;
                 submission.Coordinator = null;
                 submission.Community   = null!;
 
-                // Now update the submission root (scalar columns) and re-add all detail rows
-                _db.Submissions.Update(submission);
+                submission.AgentId       = preservedAgentId;
+                submission.CoordinatorId = preservedCoordId;
+                submission.CommunityId   = preservedCommId;
 
-                // Reset identity Ids so SQL Server auto-generates them
+                // Reset identity Ids BEFORE Update so EF Core sees them as new (Added) entities
                 foreach (var e in submission.Markets) e.Id = 0;
                 foreach (var e in submission.HealthFacilities) e.Id = 0;
                 foreach (var e in submission.OtherHealthFacilities) e.Id = 0;
@@ -213,29 +219,9 @@ namespace BenueCommunityMapping.Services
                 foreach (var e in submission.PriorityNeeds) e.Id = 0;
                 foreach (var e in submission.ConsentSignatories) e.Id = 0;
 
-                // Re-add all detail collections
-                if (submission.Markets.Any()) _db.Markets.AddRange(submission.Markets);
-                if (submission.HealthFacilities.Any()) _db.HealthFacilities.AddRange(submission.HealthFacilities);
-                if (submission.OtherHealthFacilities.Any()) _db.OtherHealthFacilities.AddRange(submission.OtherHealthFacilities);
-                if (submission.EducationalInstitutions.Any()) _db.EducationalInstitutions.AddRange(submission.EducationalInstitutions);
-                if (submission.AccessRoads.Any()) _db.AccessRoads.AddRange(submission.AccessRoads);
-                if (submission.FinancialServices.Any()) _db.FinancialServices.AddRange(submission.FinancialServices);
-                if (submission.NaturalFeatures.Any()) _db.NaturalFeatures.AddRange(submission.NaturalFeatures);
-                if (submission.IndustrialActivities.Any()) _db.IndustrialActivities.AddRange(submission.IndustrialActivities);
-                if (submission.MiningActivities.Any()) _db.MiningActivities.AddRange(submission.MiningActivities);
-                if (submission.EnvironmentalChallenges.Any()) _db.EnvironmentalChallenges.AddRange(submission.EnvironmentalChallenges);
-                if (submission.ReligiousGroups.Any()) _db.ReligiousGroups.AddRange(submission.ReligiousGroups);
-                if (submission.GSMNetworks.Any()) _db.GSMNetworks.AddRange(submission.GSMNetworks);
-                if (submission.SecurityServices.Any()) _db.SecurityServices.AddRange(submission.SecurityServices);
-                if (submission.VulnerableGroups.Any()) _db.VulnerableGroups.AddRange(submission.VulnerableGroups);
-                if (submission.SocialProtections.Any()) _db.SocialProtections.AddRange(submission.SocialProtections);
-                if (submission.SecurityProgrammes.Any()) _db.SecurityProgrammes.AddRange(submission.SecurityProgrammes);
-                if (submission.SecurityIncidents.Any()) _db.SecurityIncidents.AddRange(submission.SecurityIncidents);
-                if (submission.IDPCamps.Any()) _db.IDPCamps.AddRange(submission.IDPCamps);
-                if (submission.MigrantSettlerActivities.Any()) _db.MigrantSettlerActivities.AddRange(submission.MigrantSettlerActivities);
-                if (submission.NGOs.Any()) _db.NGOs.AddRange(submission.NGOs);
-                if (submission.PriorityNeeds.Any()) _db.PriorityNeeds.AddRange(submission.PriorityNeeds);
-                if (submission.ConsentSignatories.Any()) _db.ConsentSignatories.AddRange(submission.ConsentSignatories);
+                // Update the submission root (scalar columns). Detail items with Id=0
+                // are automatically tracked as Added by EF Core's graph discovery.
+                _db.Submissions.Update(submission);
             }
 
             await _db.SaveChangesAsync();

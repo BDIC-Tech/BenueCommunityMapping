@@ -7,7 +7,7 @@
     int selLGA       = s.Community?.Kindred?.Ward?.LocalGovernmentAreaId ?? 0;
     int selWard      = s.Community?.Kindred?.WardId ?? 0;
     int selKindred   = s.Community?.KindredId ?? 0;
-    int selCommunity = s.CommunityId;
+    int selCommunity = s.CommunityId ?? 0;
 }
 
 <div class="page-hero mt-3">
@@ -23,12 +23,12 @@
 <div class="wizard-steps mb-0" id="wizardTabs">
   @{
     var tabs = new[] {
-      ("A","Community ID","bi-geo-alt-fill"), ("B","Markets","bi-shop"),
-      ("C","Healthcare","bi-heart-pulse"),    ("D","Education","bi-mortarboard"),
-      ("E","Roads","bi-signpost-split"),      ("F","Finance","bi-bank2"),
-      ("G","Environment","bi-tree"),          ("H","Religion","bi-people"),
-      ("I","Telecom","bi-wifi"),              ("J","Security","bi-shield"),
-      ("K","Priorities","bi-star"),           ("★","Consent","bi-pen")
+      ("A","Community Identification","bi-geo-alt-fill"), ("B","Markets & Economic Activities","bi-shop"),
+      ("C","Healthcare Facilities","bi-heart-pulse"),      ("D","Educational Institutions","bi-mortarboard"),
+      ("E","Access Roads & Transportation","bi-signpost-split"), ("F","Financial Services","bi-bank2"),
+      ("G","Environmental Resources & Agriculture","bi-tree"), ("H","Religion","bi-people"),
+      ("I","Telecommunications & Information","bi-wifi"), ("J","Security & Social Protection","bi-shield"),
+      ("K","Community Priority Needs","bi-star"), ("★","Consent & Authentication","bi-pen")
     };
   }
   @for (int t = 0; t < tabs.Length; t++)
@@ -76,7 +76,7 @@
         </div>
         <div class="col-md-3">
           <label class="form-label fw-semibold">Kindred <span class="required-star">*</span></label>
-          <select id="selKindred" class="form-select" onchange="loadCommunities(this.value)" disabled>
+          <select id="selKindred" name="kindredId" class="form-select" onchange="loadCommunities(this.value)" disabled>
             <option value="">– Select Kindred –</option>
             @foreach (var k in Model.Kindreds)
             {
@@ -93,6 +93,15 @@
               <option value="@c.Id" selected="@(c.Id == selCommunity)">@c.Name (@c.Code)</option>
             }
           </select>
+        </div>
+      </div>
+
+      <!-- COMMUNITY NAME (free text, optional) -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Or enter Community Name manually <small class="text-muted">(if not in list)</small></label>
+          <input type="text" name="communityName" id="communityNameInput" class="form-control"
+                 value="@(s.CommunityName ?? s.Community?.Name)" placeholder="Enter community name" />
         </div>
       </div>
 
@@ -117,46 +126,50 @@
 
       <!-- Survey-time scalars -->
       <div class="row g-3 mt-2">
-        <div class="col-md-4">
-          <label class="form-label">Est. Number of Households</label>
+<div class="col-md-4">
+          <label class="form-label">Estimated number of households in your community</label>
           <input type="number" name="SectionA.EstimatedNumberOfHouseholds" class="form-control"
                  value="@s.EstimatedNumberOfHouseholds" min="0" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">Affected by Farmer–Herder Conflict?</label>
+          <label class="form-label">Is this community affected by farmer–herder conflict or displacement?</label>
           <select name="SectionA.AffectedByFarmerHerderConflict" class="form-select" id="conflictSel">
             <option value="false" selected="@(!s.AffectedByFarmerHerderConflict)">No</option>
             <option value="true"  selected="@(s.AffectedByFarmerHerderConflict)">Yes</option>
           </select>
         </div>
         <div class="col-md-4" id="conflictYearDiv" style="display:@(s.AffectedByFarmerHerderConflict ? "block" : "none")">
-          <label class="form-label">Year Conflict Began</label>
+          <label class="form-label">If Yes, when (Year) did this conflict begin?</label>
           <input type="number" name="SectionA.ConflictStartYear" class="form-control"
                  value="@s.ConflictStartYear" min="1900" max="2099" placeholder="YYYY" />
         </div>
         <div class="col-md-4">
-          <label class="form-label">Host Community to IDPs?</label>
+          <label class="form-label">Is this a host community to IDPs?</label>
           <select name="SectionA.IsHostCommunityToIDPs" class="form-select" id="idpSel">
             <option value="false" selected="@(!s.IsHostCommunityToIDPs)">No</option>
             <option value="true"  selected="@(s.IsHostCommunityToIDPs)">Yes</option>
           </select>
         </div>
         <div class="col-md-4" id="idpCountDiv" style="display:@(s.IsHostCommunityToIDPs ? "block" : "none")">
-          <label class="form-label">IDP Households Outside Camps</label>
+          <label class="form-label">If Yes, how many IDP households in this community are OUTSIDE of IDP Camps?</label>
           <input type="number" name="SectionA.IDPHouseholdsOutsideCamps" class="form-control"
                  value="@s.IDPHouseholdsOutsideCamps" min="0" />
         </div>
-        <div class="col-12">
-          <label class="form-label">Major Family Lineages</label>
-          <textarea name="SectionA.MajorFamilyLineages" class="form-control" rows="2">@s.MajorFamilyLineages</textarea>
-        </div>
-      </div>
+         <div class="col-12">
+           <label class="form-label">What are the major family lineages in this community?</label>
+           <textarea name="SectionA.MajorFamilyLineages" class="form-control" rows="2">@s.MajorFamilyLineages</textarea>
+         </div>
+         <div class="col-12">
+           <label class="form-label">Major ethnic groups in your community</label>
+           <textarea name="SectionA.MajorEthnicGroups" class="form-control" rows="2">@s.MajorEthnicGroups</textarea>
+         </div>
+       </div>
     </div>
   </div>
 
   <!-- ══ SECTIONS B–K use existing partials ══════════════════════ -->
   <div class="tab-pane content-card rounded-top-0" id="tab-1" style="display:none">
-    <div class="content-card-header"><i class="bi bi-shop"></i><h5>Section B: Markets</h5></div>
+    <div class="content-card-header"><i class="bi bi-shop"></i><h5>Section B: Markets and Economic Activities</h5></div>
     <div class="content-card-body">@await Html.PartialAsync("_SectionB_New", s)</div>
   </div>
 
@@ -193,9 +206,9 @@
     <button type="submit" name="action" value="save" class="btn btn-bsbs-outline ms-auto">
       <i class="bi bi-floppy me-1"></i>Save Draft
     </button>
-    <button type="submit" name="action" value="submit" id="btnSubmit"
+    <button type="button" id="btnSubmit"
             class="btn btn-bsbs-gold" style="display:none"
-            onclick="return confirm('Submit for coordinator review?')">
+            onclick="confirmSubmit()">
       <i class="bi bi-send-fill me-1"></i>Submit for Review
     </button>
     <span class="text-muted small ms-3" id="tabIndicator">Section 1 of 12</span>
@@ -203,7 +216,32 @@
 </form>
 
 @section Scripts {
+<link href="~/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+<script src="~/libs/sweetalert2/sweetalert2.all.min.js"></script>
+
 <script>
+function confirmSubmit() {
+  Swal.fire({
+    title: 'Submit for Review?',
+    text: 'Submit this questionnaire for coordinator review? You will not be able to edit it once submitted.',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#d4af37', // bsbs-gold color
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: '<i class="bi bi-send-fill me-1"></i>Yes, submit it'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const form = document.getElementById('qForm');
+      const actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.name = 'action';
+      actionInput.value = 'submit';
+      form.appendChild(actionInput);
+      form.submit();
+    }
+  });
+}
+
 const TOTAL = 12;
 let current = 0;
 

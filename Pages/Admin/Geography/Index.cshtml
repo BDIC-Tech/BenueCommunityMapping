@@ -3,12 +3,16 @@
 @{
     ViewData["Title"] = "Geographic Hierarchy";
 }
+@section Sheets{
+        <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+        <partial name="_DatatablesSheetFiles" />
+    }
 
 <div class="page-hero mt-3">
   <div class="hero-icon"><i class="bi bi-diagram-3-fill"></i></div>
   <div>
     <h1>Geographic Hierarchy</h1>
-    <p>Manage the LGA → Ward → Kindred → Community reference data used for all submissions</p>
+    <p>Manage the LGA â†’ Ward â†’ Kindred â†’ Community reference data used for all submissions</p>
   </div>
 </div>
 
@@ -58,7 +62,7 @@
 
 <div class="tab-content">
 
-  <!-- ── LGA TAB ── -->
+  <!-- â”€â”€ LGA TAB â”€â”€ -->
   <div class="tab-pane fade show active table-card rounded-top-0" id="tabLGA">
     <div class="table-card-header">
       <h5 class="ms-1">Local Government Areas</h5>
@@ -66,41 +70,17 @@
         <i class="bi bi-plus me-1"></i>Add LGA
       </button>
     </div>
-    <div class="table-responsive">
-      <table class="bsbs-table">
-        <thead><tr><th>#</th><th>Name</th><th>Code</th><th>Wards</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          @foreach (var lga in Model.LGAs)
-          {
-            <tr>
-              <td class="text-muted">@lga.Id</td>
-              <td><strong>@lga.Name</strong></td>
-              <td><code>@lga.Code</code></td>
-              <td>@(Model.WardCounts.GetValueOrDefault(lga.Id, 0))</td>
-              <td><span class="badge @(lga.IsActive ? "bg-success" : "bg-secondary")">@(lga.IsActive ? "Active" : "Inactive")</span></td>
-              <td>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-bsbs-outline" data-bs-toggle="modal" data-bs-target="#modalEditLGA-@lga.Id" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <form method="post" asp-page-handler="ToggleLGA" asp-route-id="@lga.Id">
-                    <button class="btn btn-sm @(lga.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(lga.IsActive ? "Deactivate" : "Activate")">
-                      <i class="bi @(lga.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
-                    </button>
-                  </form>
-                  <form method="post" asp-page-handler="DeleteLGA" asp-route-id="@lga.Id" onsubmit="return confirm('Delete this LGA?')">
-                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash3"></i></button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="card">
+      <div class="card-body">
+            <table class="bsbs-table table-card table-sm" id="tblLGA" style="width:100%">
+                <thead><tr><th>#</th><th>Name</th><th>Code</th><th>Wards</th><th>Status</th><th></th></tr></thead>
+                <tbody></tbody>
+            </table>
+      </div>
     </div>
   </div>
 
-  <!-- ── WARD TAB ── -->
+  <!-- â”€â”€ WARD TAB â”€â”€ -->
   <div class="tab-pane fade table-card rounded-top-0" id="tabWard">
     <div class="table-card-header">
       <h5 class="ms-1">Wards</h5>
@@ -108,42 +88,17 @@
         <i class="bi bi-plus me-1"></i>Add Ward
       </button>
     </div>
-    <div class="table-responsive">
-      <table class="bsbs-table">
-        <thead><tr><th>#</th><th>Ward Name</th><th>Code</th><th>LGA</th><th>Kindreds</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          @foreach (var w in Model.Wards)
-          {
-            <tr>
-              <td class="text-muted">@w.Id</td>
-              <td><strong>@w.Name</strong></td>
-              <td><code>@w.Code</code></td>
-              <td class="text-muted">@w.LocalGovernmentArea?.Name</td>
-              <td>@(Model.KindredCounts.GetValueOrDefault(w.Id, 0))</td>
-              <td><span class="badge @(w.IsActive ? "bg-success" : "bg-secondary")">@(w.IsActive ? "Active" : "Inactive")</span></td>
-              <td>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-bsbs-outline" data-bs-toggle="modal" data-bs-target="#modalEditWard-@w.Id" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <form method="post" asp-page-handler="ToggleWard" asp-route-id="@w.Id">
-                    <button class="btn btn-sm @(w.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(w.IsActive ? "Deactivate" : "Activate")">
-                      <i class="bi @(w.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
-                    </button>
-                  </form>
-                  <form method="post" asp-page-handler="DeleteWard" asp-route-id="@w.Id" onsubmit="return confirm('Delete this Ward?')">
-                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash3"></i></button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="card">
+      <div class="card-body">
+          <table class="bsbs-table" id="tblWard" style="width:100%">
+            <thead><tr><th>#</th><th>Ward Name</th><th>Code</th><th>LGA</th><th>Kindreds</th><th>Status</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+      </div>
     </div>
   </div>
 
-  <!-- ── KINDRED TAB ── -->
+  <!-- â”€â”€ KINDRED TAB â”€â”€ -->
   <div class="tab-pane fade table-card rounded-top-0" id="tabKindred">
     <div class="table-card-header">
       <h5 class="ms-1">Kindreds</h5>
@@ -151,43 +106,17 @@
         <i class="bi bi-plus me-1"></i>Add Kindred
       </button>
     </div>
-    <div class="table-responsive">
-      <table class="bsbs-table">
-        <thead><tr><th>#</th><th>Kindred</th><th>Code</th><th>Ward</th><th>LGA</th><th>Communities</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          @foreach (var k in Model.Kindreds)
-          {
-            <tr>
-              <td class="text-muted">@k.Id</td>
-              <td><strong>@k.Name</strong></td>
-              <td><code>@k.Code</code></td>
-              <td class="text-muted">@k.Ward?.Name</td>
-              <td class="text-muted">@k.Ward?.LocalGovernmentArea?.Name</td>
-              <td>@(Model.CommunityCounts.GetValueOrDefault(k.Id, 0))</td>
-              <td><span class="badge @(k.IsActive ? "bg-success" : "bg-secondary")">@(k.IsActive ? "Active" : "Inactive")</span></td>
-              <td>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-bsbs-outline" data-bs-toggle="modal" data-bs-target="#modalEditKindred-@k.Id" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <form method="post" asp-page-handler="ToggleKindred" asp-route-id="@k.Id">
-                    <button class="btn btn-sm @(k.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(k.IsActive ? "Deactivate" : "Activate")">
-                      <i class="bi @(k.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
-                    </button>
-                  </form>
-                  <form method="post" asp-page-handler="DeleteKindred" asp-route-id="@k.Id" onsubmit="return confirm('Delete this Kindred?')">
-                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash3"></i></button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="card">
+        <div class="card-body">
+            <table class="bsbs-table" id="tblKindred" style="width:100%">
+            <thead><tr><th>#</th><th>Kindred</th><th>Code</th><th>Ward</th><th>LGA</th><th>Communities</th><th>Status</th><th></th></tr></thead>
+            <tbody></tbody>
+            </table>
+        </div>
     </div>
   </div>
 
-  <!-- ── COMMUNITY TAB ── -->
+  <!-- â”€â”€ COMMUNITY TAB â”€â”€ -->
   <div class="tab-pane fade table-card rounded-top-0" id="tabCommunity">
     <div class="table-card-header">
       <h5 class="ms-1">Communities</h5>
@@ -195,46 +124,18 @@
         <i class="bi bi-plus me-1"></i>Add Community
       </button>
     </div>
-    <div class="table-responsive">
-      <table class="bsbs-table">
+    <div class="card">
+      <div class="card-body">
+      <table class="bsbs-table" id="tblCommunity" style="width:100%">
         <thead><tr><th>#</th><th>Community</th><th>Code</th><th>Kindred</th><th>Ward</th><th>LGA</th><th>Pop.</th><th>Submissions</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          @foreach (var c in Model.Communities)
-          {
-            <tr>
-              <td class="text-muted">@c.Id</td>
-              <td><strong>@c.Name</strong></td>
-              <td><code>@c.Code</code></td>
-              <td class="text-muted">@c.Kindred?.Name</td>
-              <td class="text-muted">@c.Kindred?.Ward?.Name</td>
-              <td class="text-muted">@c.Kindred?.Ward?.LocalGovernmentArea?.Name</td>
-              <td>@(c.EstimatedPopulation?.ToString("N0") ?? "–")</td>
-              <td><span class="badge bg-secondary rounded-pill">@(Model.SubmissionCounts.GetValueOrDefault(c.Id, 0))</span></td>
-              <td><span class="badge @(c.IsActive ? "bg-success" : "bg-secondary")">@(c.IsActive ? "Active" : "Inactive")</span></td>
-              <td>
-                <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-bsbs-outline" data-bs-toggle="modal" data-bs-target="#modalEditCommunity-@c.Id" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <form method="post" asp-page-handler="ToggleCommunity" asp-route-id="@c.Id">
-                    <button class="btn btn-sm @(c.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(c.IsActive ? "Deactivate" : "Activate")">
-                      <i class="bi @(c.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
-                    </button>
-                  </form>
-                  <form method="post" asp-page-handler="DeleteCommunity" asp-route-id="@c.Id" onsubmit="return confirm('Delete this Community?')">
-                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash3"></i></button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
+        <tbody></tbody>
       </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ── MODALS ── -->
+<!-- â”€â”€ MODALS â”€â”€ -->
 <div class="modal fade" id="modalLGA" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-bsbs-accent"><h5 class="modal-title">Add Local Government Area</h5>
@@ -262,7 +163,7 @@
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">LGA <span class="required-star">*</span></label>
           <select name="wardLgaId" class="form-select" required>
-            <option value="">– Select LGA –</option>
+            <option value="">â€“ Select LGA â€“</option>
             @foreach (var l in Model.LGAs) { <option value="@l.Id">@l.Name</option> }
           </select></div>
         <div class="mb-3"><label class="form-label">Ward Name <span class="required-star">*</span></label>
@@ -286,8 +187,8 @@
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">Ward <span class="required-star">*</span></label>
           <select name="kindredWardId" class="form-select" required>
-            <option value="">– Select Ward –</option>
-            @foreach (var w in Model.Wards) { <option value="@w.Id">@w.LocalGovernmentArea?.Name – @w.Name</option> }
+            <option value="">â€“ Select Ward â€“</option>
+            @foreach (var w in Model.Wards) { <option value="@w.Id">@w.LocalGovernmentArea?.Name â€“ @w.Name</option> }
           </select></div>
         <div class="mb-3"><label class="form-label">Kindred Name <span class="required-star">*</span></label>
           <input name="kindredName" class="form-control" required /></div>
@@ -310,7 +211,7 @@
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">Kindred <span class="required-star">*</span></label>
           <select name="communityKindredId" class="form-select" required>
-            <option value="">– Select Kindred –</option>
+            <option value="">â€“ Select Kindred â€“</option>
             @foreach (var k in Model.Kindreds)
             { <option value="@k.Id">@k.Ward?.LocalGovernmentArea?.Name / @k.Ward?.Name / @k.Name</option> }
           </select></div>
@@ -331,20 +232,18 @@
   </div></div>
 </div>
 
-<!-- ── EDIT MODALS ── -->
-@foreach (var lga in Model.LGAs)
-{
-<div class="modal fade" id="modalEditLGA-@lga.Id" tabindex="-1">
+<!-- â”€â”€ REUSABLE EDIT MODALS â”€â”€ -->
+<div class="modal fade" id="modalEditLGA" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-bsbs-accent"><h5 class="modal-title">Edit LGA</h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form method="post" asp-page-handler="EditLGA">
-      <input type="hidden" name="editLgaId" value="@lga.Id" />
+      <input type="hidden" name="editLgaId" id="editLgaId" />
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">LGA Name <span class="required-star">*</span></label>
-          <input name="editLgaName" class="form-control" required value="@lga.Name" /></div>
+          <input name="editLgaName" id="editLgaName" class="form-control" required /></div>
         <div class="mb-3"><label class="form-label">LGA Code <span class="required-star">*</span></label>
-          <input name="editLgaCode" class="form-control" required value="@lga.Code" /></div>
+          <input name="editLgaCode" id="editLgaCode" class="form-control" required /></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -353,25 +252,22 @@
     </form>
   </div></div>
 </div>
-}
 
-@foreach (var w in Model.Wards)
-{
-<div class="modal fade" id="modalEditWard-@w.Id" tabindex="-1">
+<div class="modal fade" id="modalEditWard" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-bsbs-accent"><h5 class="modal-title">Edit Ward</h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form method="post" asp-page-handler="EditWard">
-      <input type="hidden" name="editWardId" value="@w.Id" />
+      <input type="hidden" name="editWardId" id="editWardId" />
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">LGA <span class="required-star">*</span></label>
-          <select name="editWardLgaId" class="form-select" required>
-            @foreach (var l in Model.LGAs) { <option value="@l.Id" selected="@(l.Id == w.LocalGovernmentAreaId)">@l.Name</option> }
+          <select name="editWardLgaId" id="editWardLgaId" class="form-select" required>
+            @foreach (var l in Model.LGAs) { <option value="@l.Id">@l.Name</option> }
           </select></div>
         <div class="mb-3"><label class="form-label">Ward Name <span class="required-star">*</span></label>
-          <input name="editWardName" class="form-control" required value="@w.Name" /></div>
+          <input name="editWardName" id="editWardName" class="form-control" required /></div>
         <div class="mb-3"><label class="form-label">Ward Code <span class="required-star">*</span></label>
-          <input name="editWardCode" class="form-control" required value="@w.Code" /></div>
+          <input name="editWardCode" id="editWardCode" class="form-control" required /></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -380,25 +276,22 @@
     </form>
   </div></div>
 </div>
-}
 
-@foreach (var k in Model.Kindreds)
-{
-<div class="modal fade" id="modalEditKindred-@k.Id" tabindex="-1">
+<div class="modal fade" id="modalEditKindred" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-bsbs-accent"><h5 class="modal-title">Edit Kindred</h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form method="post" asp-page-handler="EditKindred">
-      <input type="hidden" name="editKindredId" value="@k.Id" />
+      <input type="hidden" name="editKindredId" id="editKindredId" />
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">Ward <span class="required-star">*</span></label>
-          <select name="editKindredWardId" class="form-select" required>
-            @foreach (var w2 in Model.Wards) { <option value="@w2.Id" selected="@(w2.Id == k.WardId)">@w2.LocalGovernmentArea?.Name – @w2.Name</option> }
+          <select name="editKindredWardId" id="editKindredWardId" class="form-select" required>
+            @foreach (var w in Model.Wards) { <option value="@w.Id">@w.LocalGovernmentArea?.Name â€“ @w.Name</option> }
           </select></div>
         <div class="mb-3"><label class="form-label">Kindred Name <span class="required-star">*</span></label>
-          <input name="editKindredName" class="form-control" required value="@k.Name" /></div>
+          <input name="editKindredName" id="editKindredName" class="form-control" required /></div>
         <div class="mb-3"><label class="form-label">Kindred Code <span class="required-star">*</span></label>
-          <input name="editKindredCode" class="form-control" required value="@k.Code" /></div>
+          <input name="editKindredCode" id="editKindredCode" class="form-control" required /></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -407,30 +300,27 @@
     </form>
   </div></div>
 </div>
-}
 
-@foreach (var c2 in Model.Communities)
-{
-<div class="modal fade" id="modalEditCommunity-@c2.Id" tabindex="-1">
+<div class="modal fade" id="modalEditCommunity" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header bg-bsbs-accent"><h5 class="modal-title">Edit Community</h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form method="post" asp-page-handler="EditCommunity">
-      <input type="hidden" name="editCommunityId" value="@c2.Id" />
+      <input type="hidden" name="editCommunityId" id="editCommunityId" />
       <div class="modal-body">
         <div class="mb-3"><label class="form-label">Kindred <span class="required-star">*</span></label>
-          <select name="editCommunityKindredId" class="form-select" required>
-            @foreach (var k2 in Model.Kindreds)
-            { <option value="@k2.Id" selected="@(k2.Id == c2.KindredId)">@k2.Ward?.LocalGovernmentArea?.Name / @k2.Ward?.Name / @k2.Name</option> }
+          <select name="editCommunityKindredId" id="editCommunityKindredId" class="form-select" required>
+            @foreach (var k in Model.Kindreds)
+            { <option value="@k.Id">@k.Ward?.LocalGovernmentArea?.Name / @k.Ward?.Name / @k.Name</option> }
           </select></div>
         <div class="mb-3"><label class="form-label">Community Name <span class="required-star">*</span></label>
-          <input name="editCommunityName" class="form-control" required value="@c2.Name" /></div>
+          <input name="editCommunityName" id="editCommunityName" class="form-control" required /></div>
         <div class="mb-3"><label class="form-label">Community Code <span class="required-star">*</span></label>
-          <input name="editCommunityCode" class="form-control" required value="@c2.Code" /></div>
+          <input name="editCommunityCode" id="editCommunityCode" class="form-control" required /></div>
         <div class="mb-3"><label class="form-label">Major Ethnic Groups</label>
-          <input name="editCommunityEthnic" class="form-control" value="@c2.MajorEthnicGroups" /></div>
+          <input name="editCommunityEthnic" id="editCommunityEthnic" class="form-control" /></div>
         <div class="mb-3"><label class="form-label">Estimated Population</label>
-          <input type="number" name="editCommunityPop" class="form-control" min="0" value="@c2.EstimatedPopulation" /></div>
+          <input type="number" name="editCommunityPop" id="editCommunityPop" class="form-control" min="0" /></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -439,4 +329,231 @@
     </form>
   </div></div>
 </div>
+
+<!-- Hidden action forms for toggle/delete -->
+<form id="frmToggle" method="post" style="display:none">
+  @Html.AntiForgeryToken()
+</form>
+<form id="frmDelete" method="post" style="display:none">
+  @Html.AntiForgeryToken()
+</form>
+
+
+
+
+@section Scripts {
+  <partial name="_DataTablesScriptsFiles" />
+  <script src="~/libs/sweetalert2/sweetalert2.all.min.js"></script>
+  <script src="~/libs/jquery.blockUI/jquery.blockUI.min.js"></script>
+<script>
+const PAGE = '/Admin/Geography';
+const TOKEN = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+function statusBadge(isActive) {
+  return isActive
+    ? '<span class="badge bg-success">Active</span>'
+    : '<span class="badge bg-secondary">Inactive</span>';
+}
+
+function actionBtns(id, type) {
+  const toggleIcon = `<i class="bi bi-arrow-repeat"></i>`;
+  return `
+  <div class="dropdown">
+    <button class="btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-three-dots-vertical"></i>
+    </button>
+    <ul class="dropdown-menu">
+      <li><button class="dropdown-item" type="button" onclick="openEdit${type}(${id})"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit</button></li>
+      <li><button class="dropdown-item" type="button" onclick="doToggle('${type}',${id})"><i class="bi bi-arrow-repeat me-2 text-warning"></i>${toggleIcon}</button></li>
+      <li><button class="dropdown-item text-danger" type="button" onclick="doDelete('${type}',${id})"><i class="bi bi-trash3 me-2"></i>Delete</button></li>
+    </ul>
+</div>
+  `;
+}
+
+function dtConfig(url, columns) {
+  return {
+    serverSide: true,
+    processing: true,
+    searching: true,
+    paging: true,
+    info: true,
+    responsive: true,
+    ajax: { url: url, type: 'POST' },
+    columns: columns,
+    language: { emptyTable: 'No data available', processing: '<div class="spinner-border spinner-border-sm text-primary"></div> Loading...' },
+    dom: 'Bfrtip',
+    buttons: ['copy','csv','excel','pdf','print']
+  };
+}
+
+// â”€â”€ LGA DataTable â”€â”€
+const tblLGA = new DataTable('#tblLGA', dtConfig('/api/home/GetLgas', [
+  { data: 'id', name: '0' },
+  { data: 'name', name: '1', render: (d) => `<strong>${d}</strong>` },
+  { data: 'code', name: '2', render: (d) => `<code>${d}</code>` },
+  { data: 'wardCount', name: '3', orderable: false },
+  { data: 'isActive', name: '4', orderable: false, render: (d) => statusBadge(d) },
+  { data: null, orderable: false, searchable: false, render: (d) => actionBtns(d.id, 'LGA') }
+]));
+
+// â”€â”€ Ward DataTable â”€â”€
+const tblWard = new DataTable('#tblWard', dtConfig('/api/home/GetWards', [
+  { data: 'id', name: '0' },
+  { data: 'name', name: '1', render: (d) => `<strong>${d}</strong>` },
+  { data: 'code', name: '2', render: (d) => `<code>${d}</code>` },
+  { data: 'lgaName', name: '3' },
+  { data: 'kindredCount', name: '4', orderable: false },
+  { data: 'isActive', name: '5', orderable: false, render: (d) => statusBadge(d) },
+  { data: null, orderable: false, searchable: false, render: (d) => actionBtns(d.id, 'Ward') }
+]));
+
+// â”€â”€ Kindred DataTable â”€â”€
+const tblKindred = new DataTable('#tblKindred', dtConfig('/api/home/GetKindreds', [
+  { data: 'id', name: '0' },
+  { data: 'name', name: '1', render: (d) => `<strong>${d}</strong>` },
+  { data: 'code', name: '2', render: (d) => `<code>${d}</code>` },
+  { data: 'wardName', name: '3' },
+  { data: 'lgaName', name: '4' },
+  { data: 'communityCount', name: '5', orderable: false },
+  { data: 'isActive', name: '6', orderable: false, render: (d) => statusBadge(d) },
+  { data: null, orderable: false, searchable: false, render: (d) => actionBtns(d.id, 'Kindred') }
+]));
+
+// â”€â”€ Community DataTable â”€â”€
+const tblCommunity = new DataTable('#tblCommunity', dtConfig('/api/home/GetCommunities', [
+  { data: 'id', name: '0' },
+  { data: 'name', name: '1', render: (d) => `<strong>${d}</strong>` },
+  { data: 'code', name: '2', render: (d) => `<code>${d}</code>` },
+  { data: 'kindredName', name: '3' },
+  { data: 'wardName', name: '4' },
+  { data: 'lgaName', name: '5' },
+  { data: 'estimatedPopulation', name: '6', orderable: false, render: (d) => d ? d.toLocaleString() : 'â€“' },
+  { data: 'submissionCount', name: '7', orderable: false, render: (d) => `<span class="badge bg-secondary rounded-pill">${d}</span>` },
+  { data: 'isActive', name: '8', orderable: false, render: (d) => statusBadge(d) },
+  { data: null, orderable: false, searchable: false, render: (d) => actionBtns(d.id, 'Community') }
+]));
+
+// Redraw visible table on tab switch
+document.querySelectorAll('#geoTabs button[data-bs-toggle="tab"]').forEach(el => {
+  el.addEventListener('shown.bs.tab', () => {
+    const target = el.getAttribute('data-bs-target');
+    const tbl = document.querySelector(target + ' table');
+    if (tbl) DataTable.api(tbl).columns.adjust().responsive.recalc();
+  });
+});
+
+// â”€â”€ Edit modal openers (fetch row data from DataTable) â”€â”€
+function openEditLGA(id) {
+  const row = tblLGA.rows().data().toArray().find(r => r.id === id);
+  if (!row) return;
+  document.getElementById('editLgaId').value = row.id;
+  document.getElementById('editLgaName').value = row.name;
+  document.getElementById('editLgaCode').value = row.code;
+  new bootstrap.Modal(document.getElementById('modalEditLGA')).show();
+}
+function openEditWard(id) {
+  const row = tblWard.rows().data().toArray().find(r => r.id === id);
+  if (!row) return;
+  document.getElementById('editWardId').value = row.id;
+  document.getElementById('editWardName').value = row.name;
+  document.getElementById('editWardCode').value = row.code;
+  new bootstrap.Modal(document.getElementById('modalEditWard')).show();
+}
+function openEditKindred(id) {
+  const row = tblKindred.rows().data().toArray().find(r => r.id === id);
+  if (!row) return;
+  document.getElementById('editKindredId').value = row.id;
+  document.getElementById('editKindredName').value = row.name;
+  document.getElementById('editKindredCode').value = row.code;
+  new bootstrap.Modal(document.getElementById('modalEditKindred')).show();
+}
+function openEditCommunity(id) {
+  const row = tblCommunity.rows().data().toArray().find(r => r.id === id);
+  if (!row) return;
+  document.getElementById('editCommunityId').value = row.id;
+  document.getElementById('editCommunityName').value = row.name;
+  document.getElementById('editCommunityCode').value = row.code;
+  document.getElementById('editCommunityEthnic').value = '';
+  document.getElementById('editCommunityPop').value = row.estimatedPopulation || '';
+  new bootstrap.Modal(document.getElementById('modalEditCommunity')).show();
+}
+
+// ── Toggle / Delete via AJAX ──
+function getTbl(type) {
+  return { LGA: tblLGA, Ward: tblWard, Kindred: tblKindred, Community: tblCommunity }[type];
+}
+
+function doToggle(type, id) {
+  Swal.fire({
+    title: 'Toggle Status?',
+    text: `Are you sure you want to toggle this ${type}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#e6a817',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, toggle it'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    $.blockUI({ message: '<div class="d-flex align-items-center gap-2"><div class="spinner-border spinner-border-sm text-primary"></div> Processing...</div>', css: { border: 'none', padding: '15px', backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '8px', fontSize: '14px' } });
+    $.ajax({
+      url: '/api/home/ToggleEntity',
+      type: 'POST',
+      data: { type, id },
+      success: function(res) {
+        $.unblockUI();
+        if (res.success) {
+          Swal.fire({ icon: 'success', title: 'Done!', text: res.message, timer: 2000, showConfirmButton: false });
+          getTbl(type)?.ajax.reload(null, false);
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+        }
+      },
+      error: function() {
+        $.unblockUI();
+        Swal.fire({ icon: 'error', title: 'Error', text: 'An unexpected error occurred.' });
+      }
+    });
+  });
+}
+
+function doDelete(type, id) {
+  Swal.fire({
+    title: `Delete this ${type}?`,
+    html: `<p class="text-muted">This action cannot be undone. If other records depend on this ${type}, the deletion will be rejected.</p>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: '<i class="bi bi-trash3 me-1"></i>Yes, delete it',
+    cancelButtonText: 'Cancel'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    $.blockUI({ message: '<div class="d-flex align-items-center gap-2"><div class="spinner-border spinner-border-sm text-danger"></div> Checking dependencies & deleting...</div>', css: { border: 'none', padding: '15px', backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '8px', fontSize: '14px' } });
+    $.ajax({
+      url: '/api/home/DeleteEntity',
+      type: 'POST',
+      data: { type, id },
+      success: function(res) {
+        $.unblockUI();
+        if (res.success) {
+          Swal.fire({ icon: 'success', title: 'Deleted!', text: res.message, timer: 2500, showConfirmButton: false });
+          getTbl(type)?.ajax.reload(null, false);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Cannot Delete',
+            html: `<p>${res.message}</p>`,
+            confirmButtonColor: '#0d6efd'
+          });
+        }
+      },
+      error: function() {
+        $.unblockUI();
+        Swal.fire({ icon: 'error', title: 'Error', text: 'An unexpected error occurred.' });
+      }
+    });
+  });
+}
+</script>
 }

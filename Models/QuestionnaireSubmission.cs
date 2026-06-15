@@ -32,8 +32,12 @@ namespace BenueCommunityMapping.Models
         public ApplicationUser? Coordinator   { get; set; }
 
         // ── GEOGRAPHIC LINK ────────────────────────────────────────────
-        [Required] public int CommunityId     { get; set; }
-        public Community Community            { get; set; } = null!;
+        public int? CommunityId                    { get; set; }
+        public Community? Community                { get; set; }
+
+        /// <summary>Free-text community name entered on questionnaire (optional).</summary>
+        [MaxLength(300)]
+        public string? CommunityName               { get; set; }
 
         // ══════ SECTION A — scalars captured at survey time ═══════════
         [Range(0, int.MaxValue)] public int? EstimatedNumberOfHouseholds { get; set; }
@@ -42,6 +46,7 @@ namespace BenueCommunityMapping.Models
         public bool IsHostCommunityToIDPs           { get; set; }
         [Range(0, int.MaxValue)] public int? IDPHouseholdsOutsideCamps { get; set; }
         [MaxLength(1000)] public string? MajorFamilyLineages { get; set; }
+        [MaxLength(1000)] public string? MajorEthnicGroups { get; set; }
 
         // ══════ SECTION B — market scalars ════════════════════════════
         [MaxLength(1000)] public string? MarketChallenges                { get; set; }
@@ -52,8 +57,13 @@ namespace BenueCommunityMapping.Models
         // ══════ SECTION C — healthcare scalars ════════════════════════
         public bool FunctionalAmbulanceOrReferral                        { get; set; }
         [MaxLength(1000)] public string? MajorDiseasesReported           { get; set; }
-        public bool WomenDiedDuringChildbirthLast2Years                  { get; set; }
+        public bool WomenDiedDuringChildbirthLast2Years                         { get; set; }
+        [Range(0, int.MaxValue)] public int? WomenDiedDuringChildbirthLast2YearsCount       { get; set; }
+        public bool PregnantWomenDiedBeforeChildbirthLast2Years              { get; set; }
+        [Range(0, int.MaxValue)] public int? PregnantWomenDiedBeforeChildbirthLast2YearsCount { get; set; }
         public bool PregnantWomenCanAccessEmergencyTransportAtNight      { get; set; }
+        public bool ChildrenUnder5DiedLast2Years                         { get; set; }
+        [Range(0, int.MaxValue)] public int? ChildrenUnder5DiedLast2YearsCount { get; set; }
         [MaxLength(500)] public string? NearestHealthFacilityIfNone      { get; set; }
 
         // ══════ SECTION D — education scalars ═════════════════════════
@@ -86,6 +96,7 @@ namespace BenueCommunityMapping.Models
         // ══════ SECTION G — environment scalars ═══════════════════════
         [MaxLength(1000)] public string? NaturalFeaturesChallenges       { get; set; }
         public bool FarmingSubsistence    { get; set; } public bool FarmingCommercial         { get; set; }
+        public bool FarmingBoth           { get; set; }
         public bool DomLandResidential    { get; set; } public bool DomLandAgricultural       { get; set; }
         public bool DomLandCommercial     { get; set; } public bool DomLandIndustrial         { get; set; }
         public bool WaterSourceRiverStream { get; set; } public bool WaterSourceBorehole      { get; set; }
@@ -167,7 +178,8 @@ namespace BenueCommunityMapping.Models
         public ICollection<MigrantSettlerActivity>MigrantSettlerActivities{ get; set; } = new List<MigrantSettlerActivity>();
         public ICollection<NGO>                   NGOs                    { get; set; } = new List<NGO>();
 
-        // Q18: Electricity sources
+        // Q17 & Q18: Electricity sources
+        public PublicPowerSupplyHours? PublicPowerSupplyHours { get; set; }
         public bool ElecSourcePublicPower { get; set; }
         public bool ElecSourceGenerators { get; set; }
         public bool ElecSourceSolarPower { get; set; }

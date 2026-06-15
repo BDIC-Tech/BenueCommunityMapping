@@ -1,70 +1,86 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
 @using BenueCommunityMapping.Models.Survey
-<div class="row g-3 mb-3">
-  <div class="col-12"><label class="form-label">Major Challenges Faced by Markets</label>
-    <textarea name="SectionB.MajorChallenges" class="form-control" rows="2">@Model.MarketChallenges</textarea></div>
-  <div class="col-md-4"><label class="form-label">Market Activities Affected by Insecurity?</label>
-    <select name="SectionB.MarketActivitiesAffectedByInsecurity" class="form-select">
-      <option value="false" selected="@(!Model.MarketActivitiesAffectedByInsecurity)">No</option>
-      <option value="true" selected="@(Model.MarketActivitiesAffectedByInsecurity)">Yes</option>
-    </select></div>
-  <div class="col-md-4"><label class="form-label">Traders from Outside Afraid?</label>
-    <select name="SectionB.TradersFromOutsideAfraid" class="form-select">
-      <option value="false" selected="@(!Model.TradersFromOutsideAfraid)">No</option>
-      <option value="true" selected="@(Model.TradersFromOutsideAfraid)">Yes</option>
-    </select></div>
-  <div class="col-md-4"><label class="form-label">Community Pays Illegal Levy?</label>
-    <select name="SectionB.CommunityPaysIllegalLevy" class="form-select">
-      <option value="false" selected="@(!Model.CommunityPaysIllegalLevy)">No</option>
-      <option value="true" selected="@(Model.CommunityPaysIllegalLevy)">Yes</option>
-    </select></div>
-</div>
-<p class="section-divider">Markets</p>
+
+@* ─────────────────────────────────────────────────────────────────────────
+   SECTION B: MARKETS AND ECONOMIC ACTIVITIES
+   Order follows the paper questionnaire exactly:
+     Q1  – Markets table (first)
+     Q2  – Major challenges faced by markets in your community
+     Q3  – Are market activities affected by insecurity?
+     Q4  – Are traders from outside the community afraid to come here?
+     Q5  – Does your community pay any illegal levy or informal tax?
+───────────────────────────────────────────────────────────────────────── *@
+
+@* ── Q1. Markets table ───────────────────────────────────────────────── *@
+<p class="section-divider">1. Please provide details of markets available in your community using the table below:</p>
 <div class="table-responsive mb-2">
-  <table class="dyn-table"><thead><tr>
-    <th>Name</th><th>Location</th><th>Size (m²)</th><th>Type</th><th>Storage</th>
-    <th>Main Goods</th><th>Farm Produce</th><th>Status</th><th>Infrastructure</th>
-    <th>Active Season</th><th>Women/Youth?</th><th></th>
-  </tr></thead>
+   <table class="dyn-table"><thead><tr>
+     <th>Name of Market</th><th>Location</th><th>Size (Square meters, M²)</th><th>Type of market [Daily, Weekly, Periodic]</th><th>What storage facilities are available in this market? (Warehouse/Stores)</th>
+     <th>Main goods sold in this market</th><th>What farm produce is predominantly sold in this market?</th><th>Market status: [Functional, Nonfunctional]</th><th>Market infrastructure condition: [Excellent, Moderate, Poor]</th>
+     <th>What time of the year is this market most active?</th><th>Are women and youth major participants in this market? [Yes, No]</th><th>Does this market operate in the night as well? [Yes, No]</th><th></th>
+   </tr></thead>
   <tbody id="marketsBody">
     @{ int mi = 0; }
     @foreach (var m in Model.Markets)
     {
-      <tr>
-        <td><input name="SectionB.Markets[@mi].Name" value="@m.Name"/></td>
-        <td><input name="SectionB.Markets[@mi].Location" value="@m.Location"/></td>
-        <td><input type="number" name="SectionB.Markets[@mi].SizeSquareMeters" value="@m.SizeSquareMeters" style="min-width:70px"/></td>
-        <td><select name="SectionB.Markets[@mi].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<MarketType>()){<option value="@v" selected="@(m.Type==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><input name="SectionB.Markets[@mi].StorageFacilities" value="@m.StorageFacilities"/></td>
-        <td><input name="SectionB.Markets[@mi].MainGoodsSold" value="@m.MainGoodsSold"/></td>
-        <td><input name="SectionB.Markets[@mi].FarmProduceSold" value="@m.FarmProduceSold"/></td>
-        <td><select name="SectionB.Markets[@mi].MarketStatus"><option value="">–</option>@foreach(var v in Enum.GetValues<FunctionalStatus>()){<option value="@v" selected="@(m.MarketStatus==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionB.Markets[@mi].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<InfrastructureCondition>()){<option value="@v" selected="@(m.InfrastructureCondition==v)">@v.ToDisplayText()</option>}</select></td>
-        <td><input name="SectionB.Markets[@mi].MostActiveTimeOfYear" value="@m.MostActiveTimeOfYear"/></td>
-        <td><select name="SectionB.Markets[@mi].WomenAndYouthMajorParticipants"><option value="">–</option><option value="true" selected="@(m.WomenAndYouthMajorParticipants==true)">Yes</option><option value="false" selected="@(m.WomenAndYouthMajorParticipants==false)">No</option></select></td>
-        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
-      </tr>
+       <tr>
+         <td><input name="SectionB.Markets[@mi].Name" value="@m.Name"/></td>
+         <td><input name="SectionB.Markets[@mi].Location" value="@m.Location"/></td>
+         <td><input type="number" name="SectionB.Markets[@mi].SizeSquareMeters" value="@m.SizeSquareMeters" style="min-width:70px"/></td>
+         <td><select name="SectionB.Markets[@mi].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<MarketType>()){<option value="@v" selected="@(m.Type==v)">@v.ToDisplayText()</option>}</select></td>
+         <td><input name="SectionB.Markets[@mi].StorageFacilities" value="@m.StorageFacilities"/></td>
+         <td><input name="SectionB.Markets[@mi].MainGoodsSold" value="@m.MainGoodsSold"/></td>
+         <td><input name="SectionB.Markets[@mi].FarmProduceSold" value="@m.FarmProduceSold"/></td>
+         <td><select name="SectionB.Markets[@mi].MarketStatus"><option value="">–</option>@foreach(var v in Enum.GetValues<FunctionalStatus>()){<option value="@v" selected="@(m.MarketStatus==v)">@v.ToDisplayText()</option>}</select></td>
+         <td><select name="SectionB.Markets[@mi].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<InfrastructureCondition>()){<option value="@v" selected="@(m.InfrastructureCondition==v)">@v.ToDisplayText()</option>}</select></td>
+         <td><input name="SectionB.Markets[@mi].MostActiveTimeOfYear" value="@m.MostActiveTimeOfYear"/></td>
+         <td><select name="SectionB.Markets[@mi].WomenAndYouthMajorParticipants"><option value="">–</option><option value="true" selected="@(m.WomenAndYouthMajorParticipants==true)">Yes</option><option value="false" selected="@(m.WomenAndYouthMajorParticipants==false)">No</option></select></td>
+         <td><select name="SectionB.Markets[@mi].OperatesAtNight"><option value="">–</option><option value="true" selected="@(m.OperatesAtNight==true)">Yes</option><option value="false" selected="@(m.OperatesAtNight==false)">No</option></select></td>
+         <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+       </tr>
       mi++;
     }
-    @if (!Model.Markets.Any())
-    {
-      <tr>
-        <td><input name="SectionB.Markets[0].Name"/></td>
-        <td><input name="SectionB.Markets[0].Location"/></td>
-        <td><input type="number" name="SectionB.Markets[0].SizeSquareMeters" style="min-width:70px"/></td>
-        <td><select name="SectionB.Markets[0].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<MarketType>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-        <td><input name="SectionB.Markets[0].StorageFacilities"/></td>
-        <td><input name="SectionB.Markets[0].MainGoodsSold"/></td>
-        <td><input name="SectionB.Markets[0].FarmProduceSold"/></td>
-        <td><select name="SectionB.Markets[0].MarketStatus"><option value="">–</option>@foreach(var v in Enum.GetValues<FunctionalStatus>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-        <td><select name="SectionB.Markets[0].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
-        <td><input name="SectionB.Markets[0].MostActiveTimeOfYear"/></td>
-        <td><select name="SectionB.Markets[0].WomenAndYouthMajorParticipants"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
-        <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
-      </tr>
-    }
+     @if (!Model.Markets.Any())
+     {
+       <tr>
+         <td><input name="SectionB.Markets[0].Name"/></td>
+         <td><input name="SectionB.Markets[0].Location"/></td>
+         <td><input type="number" name="SectionB.Markets[0].SizeSquareMeters" style="min-width:70px"/></td>
+         <td><select name="SectionB.Markets[0].Type"><option value="">–</option>@foreach(var v in Enum.GetValues<MarketType>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+         <td><input name="SectionB.Markets[0].StorageFacilities"/></td>
+         <td><input name="SectionB.Markets[0].MainGoodsSold"/></td>
+         <td><input name="SectionB.Markets[0].FarmProduceSold"/></td>
+         <td><select name="SectionB.Markets[0].MarketStatus"><option value="">–</option>@foreach(var v in Enum.GetValues<FunctionalStatus>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+         <td><select name="SectionB.Markets[0].InfrastructureCondition"><option value="">–</option>@foreach(var v in Enum.GetValues<InfrastructureCondition>()){<option value="@v">@v.ToDisplayText()</option>}</select></td>
+         <td><input name="SectionB.Markets[0].MostActiveTimeOfYear"/></td>
+         <td><select name="SectionB.Markets[0].WomenAndYouthMajorParticipants"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+         <td><select name="SectionB.Markets[0].OperatesAtNight"><option value="">–</option><option value="true">Yes</option><option value="false">No</option></select></td>
+         <td><button type="button" class="btn-del-row" onclick="delRow(this)"><i class="bi bi-trash3"></i></button></td>
+       </tr>
+     }
   </tbody></table>
 </div>
 <button type="button" class="btn-add-row" onclick="addRow('marketsBody')">
   <i class="bi bi-plus-circle me-1"></i>Add Market
 </button>
+
+@* ── Q2–Q5. Scalar questions (correct position: AFTER the table) ─────── *@
+<div class="row g-3 mb-3 mt-3">
+  <div class="col-12"><label class="form-label">2. Major challenges faced by markets in your community:</label>
+    <textarea name="SectionB.MajorChallenges" class="form-control" rows="2">@Model.MarketChallenges</textarea></div>
+  <div class="col-md-4"><label class="form-label">3. Are market activities affected by insecurity?</label>
+    <select name="SectionB.MarketActivitiesAffectedByInsecurity" class="form-select">
+      <option value="false" selected="@(!Model.MarketActivitiesAffectedByInsecurity)">No</option>
+      <option value="true" selected="@(Model.MarketActivitiesAffectedByInsecurity)">Yes</option>
+    </select></div>
+  <div class="col-md-4"><label class="form-label">4. Are traders from outside the community afraid to come here?</label>
+    <select name="SectionB.TradersFromOutsideAfraid" class="form-select">
+      <option value="false" selected="@(!Model.TradersFromOutsideAfraid)">No</option>
+      <option value="true" selected="@(Model.TradersFromOutsideAfraid)">Yes</option>
+    </select></div>
+  <div class="col-md-4"><label class="form-label">5. Does your community feel they are paying any form of illegal levy or informal tax in the market?</label>
+    <select name="SectionB.CommunityPaysIllegalLevy" class="form-select">
+      <option value="false" selected="@(!Model.CommunityPaysIllegalLevy)">No</option>
+      <option value="true" selected="@(Model.CommunityPaysIllegalLevy)">Yes</option>
+    </select></div>
+</div>

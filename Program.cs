@@ -5,11 +5,13 @@ using BenueCommunityMapping.Models.Email_Services;
 using BenueCommunityMapping.Services;
 using BenueCommunityMapping.Services.Analytics;
 using BenueCommunityMapping.Services.Export;
+using BenueCommunityMapping.Services.Geography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseUrls("http://localhost:5002");
 // ── Database ──────────────────────────────────────────────────────────
 //builder.Services.AddDbContext<AppDbContext>(options =>
 //    options.UseSqlServer(
@@ -58,6 +60,7 @@ builder.Services.AddScoped<IAnalyticsService,  AnalyticsService>();
 builder.Services.AddScoped<IExportService,     ExportService>();
 builder.Services.AddScoped<ISubmissionService, SubmissionService>();
 builder.Services.AddScoped<IUserService,       UserService>();
+builder.Services.AddScoped<IGeographyService,  GeographyService>();
 
 // Bind SMTP settings from appsettings.json → "Smtp" section
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
@@ -67,6 +70,7 @@ builder.Services.AddTransient<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddHttpContextAccessor();   // needed by UserService to build the confirmation URL
 
 // ── Razor Pages + authorization conventions ───────────────────────────
+builder.Services.AddControllers();
 builder.Services.AddRazorPages(opts =>
 {
     // Require authentication for every page by default
@@ -103,6 +107,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
+app.MapControllers();
 
 // Seed reference data and default users
 await DbSeeder.SeedAsync(app.Services);

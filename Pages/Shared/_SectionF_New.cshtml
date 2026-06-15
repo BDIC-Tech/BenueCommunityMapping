@@ -1,23 +1,20 @@
 @model BenueCommunityMapping.Models.QuestionnaireSubmission
-<div class="row g-3 mb-3">
-  <div class="col-md-6"><label class="form-label">Relies More on Informal Savings (Adashi)?</label>
-    <select name="SectionF.RelyMoreOnInformalSavingsGroups" class="form-select">
-      <option value="false" selected="@(!Model.RelyMoreOnInformalSavingsGroups)">No</option>
-      <option value="true"  selected="@(Model.RelyMoreOnInformalSavingsGroups)">Yes</option>
-    </select></div>
-  <div class="col-md-6"><label class="form-label">Members Lost Money to Failed POS / Fraud?</label>
-    <select name="SectionF.MembersLostMoneyToFailedPOSOrFraud" class="form-select">
-      <option value="false" selected="@(!Model.MembersLostMoneyToFailedPOSOrFraud)">No</option>
-      <option value="true"  selected="@(Model.MembersLostMoneyToFailedPOSOrFraud)">Yes</option>
-    </select></div>
-  <div class="col-12"><label class="form-label">Major Challenges</label>
-    <textarea name="SectionF.MajorChallenges" class="form-control" rows="2">@Model.FinancialServicesChallenges</textarea></div>
-</div>
-<p class="section-divider">Financial Services</p>
+
+@* ─────────────────────────────────────────────────────────────────────────
+   SECTION F: FINANCIAL SERVICES
+   Order follows the paper questionnaire exactly:
+     Q1  – Financial services table (first)
+     Q2  – Major challenges with financial services in your community
+     Q3  – Do community members rely more on informal savings groups?
+     Q4  – Have members lost money to failed POS or fraudulent agents?
+───────────────────────────────────────────────────────────────────────── *@
+
+@* ── Q1. Financial services table ───────────────────────────────────── *@
+<p class="section-divider">Please provide details of financial services available in your community using the table below:</p>
 <div class="table-responsive mb-2">
   <table class="dyn-table"><thead><tr>
-    <th>Institution/Service</th><th>Location</th><th>Type</th><th>Offers Loans?</th>
-    <th>Distance</th><th>Beneficial?</th><th>Women/Youth Equal Access?</th><th></th>
+    <th>Name of financial service or institution</th><th>Location</th><th>Type of financial services [Commercial bank, Microfinance bank, POS/Agent banking, Cooperative/Thrift groups]</th><th>Does it offer loans/credit to community members? [Yes, No]</th>
+    <th>Distance from the centre of the community [&lt; 1km, 1-2 km, &gt; 2 km]</th><th>Does the community find its services beneficial? [Yes, No]</th><th>Do women and youth have equal access to its loans? [Yes, No]</th><th></th>
   </tr></thead>
   <tbody id="financeBody">
     @{ int fi = 0; }
@@ -53,3 +50,19 @@
 <button type="button" class="btn-add-row" onclick="addRow('financeBody')">
   <i class="bi bi-plus-circle me-1"></i>Add Financial Service
 </button>
+
+@* ── Q2–Q4. Scalar questions (correct position: AFTER the table) ─────── *@
+<div class="row g-3 mb-3 mt-3">
+  <div class="col-12"><label class="form-label">1. Major challenges with financial services in your community:</label>
+    <textarea name="SectionF.MajorChallenges" class="form-control" rows="2">@Model.FinancialServicesChallenges</textarea></div>
+  <div class="col-md-6"><label class="form-label">2. Do community members rely more on informal savings groups (Adashi/Contribution) than on formal financial institutions?</label>
+    <select name="SectionF.RelyMoreOnInformalSavingsGroups" class="form-select">
+      <option value="false" selected="@(!Model.RelyMoreOnInformalSavingsGroups)">No</option>
+      <option value="true"  selected="@(Model.RelyMoreOnInformalSavingsGroups)">Yes</option>
+    </select></div>
+  <div class="col-md-6"><label class="form-label">3. Have members of your community lost money due to failed POS or fraudulent agents?</label>
+    <select name="SectionF.MembersLostMoneyToFailedPOSOrFraud" class="form-select">
+      <option value="false" selected="@(!Model.MembersLostMoneyToFailedPOSOrFraud)">No</option>
+      <option value="true"  selected="@(Model.MembersLostMoneyToFailedPOSOrFraud)">Yes</option>
+    </select></div>
+</div>

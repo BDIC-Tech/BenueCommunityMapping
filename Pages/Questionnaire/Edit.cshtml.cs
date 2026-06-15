@@ -2,6 +2,7 @@ using BenueCommunityMapping.Authorization;
 using BenueCommunityMapping.Data;
 using BenueCommunityMapping.Models;
 using BenueCommunityMapping.Models.Survey;
+using BenueCommunityMapping.Models.Geography;
 using BenueCommunityMapping.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -104,10 +105,49 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             if (!Guid.TryParse(Request.Form["submissionId"], out Guid submissionId))
                 submissionId = Guid.Empty;
 
-            if (!int.TryParse(Request.Form["communityId"], out int communityId) || communityId == 0)
+            // Pull community name from form (optional free text)
+            string? communityName = Request.Form["communityName"].ToString();
+            if (string.IsNullOrWhiteSpace(communityName)) communityName = null;
+
+            int? kindredId = null;
+            if (int.TryParse(Request.Form["kindredId"], out int kId) && kId > 0)
+                kindredId = kId;
+
+            int communityId = 0;
+            if (int.TryParse(Request.Form["communityId"], out int cid) && cid > 0)
+            {
+                communityId = cid;
+            }
+
+            // If community name is provided manually, dynamically find or create the Community entity
+            if (communityId == 0 && !string.IsNullOrWhiteSpace(communityName))
+            {
+                var existingCommunity = await _db.Communities
+                    .FirstOrDefaultAsync(c => c.Name.ToLower() == communityName.ToLower() && c.KindredId == kindredId);
+
+                if (existingCommunity != null)
+                {
+                    communityId = existingCommunity.Id;
+                }
+                else
+                {
+                    var newCommunity = new Community
+                    {
+                        Name = communityName,
+                        Code = "NEW-" + Guid.NewGuid().ToString("N")[..6].ToUpper(),
+                        KindredId = kindredId, // Safely nullable
+                        IsActive = true
+                    };
+                    _db.Communities.Add(newCommunity);
+                    await _db.SaveChangesAsync();
+                    communityId = newCommunity.Id;
+                }
+            }
+
+            if (communityId == 0)
             {
                 await LoadGeoDropdownsAsync();
-                TempData["Error"] = "Please select a community before saving.";
+                TempData["Error"] = "Please select a community or enter one manually before saving.";
                 Submission = new QuestionnaireSubmission { Id = Guid.Empty, Status = SubmissionStatus.Draft };
                 IsNew = true;
                 return Page();
@@ -140,6 +180,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             submission.IsHostCommunityToIDPs          = ParseBool("SectionA.IsHostCommunityToIDPs");
             submission.IDPHouseholdsOutsideCamps      = ParseNullInt("SectionA.IDPHouseholdsOutsideCamps");
             submission.MajorFamilyLineages            = F("SectionA.MajorFamilyLineages");
+            submission.MajorEthnicGroups              = F("SectionA.MajorEthnicGroups");
 
             // ── SECTION B ─────────────────────────────────────────────
             submission.MarketChallenges                       = F("SectionB.MajorChallenges");
@@ -161,14 +202,20 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 MarketStatus     = ParseNullEnum<FunctionalStatus>($"SectionB.Markets[{i}].MarketStatus"),
                 InfrastructureCondition = ParseNullEnum<InfrastructureCondition>($"SectionB.Markets[{i}].InfrastructureCondition"),
                 MostActiveTimeOfYear = row("MostActiveTimeOfYear"),
-                WomenAndYouthMajorParticipants = ParseNullBool($"SectionB.Markets[{i}].WomenAndYouthMajorParticipants")
+                WomenAndYouthMajorParticipants = ParseNullBool($"SectionB.Markets[{i}].WomenAndYouthMajorParticipants"),
+                OperatesAtNight  = ParseNullBool($"SectionB.Markets[{i}].OperatesAtNight")
             });
 
             // ── SECTION C ─────────────────────────────────────────────
             submission.FunctionalAmbulanceOrReferral                   = ParseBool("SectionC.FunctionalAmbulanceOrReferral");
             submission.MajorDiseasesReported                           = F("SectionC.MajorDiseasesReported");
             submission.WomenDiedDuringChildbirthLast2Years             = ParseBool("SectionC.WomenDiedDuringChildbirthLast2Years");
+            submission.WomenDiedDuringChildbirthLast2YearsCount        = ParseNullInt("SectionC.WomenDiedDuringChildbirthLast2YearsCount");
+            submission.PregnantWomenDiedBeforeChildbirthLast2Years     = ParseBool("SectionC.PregnantWomenDiedBeforeChildbirthLast2Years");
+            submission.PregnantWomenDiedBeforeChildbirthLast2YearsCount = ParseNullInt("SectionC.PregnantWomenDiedBeforeChildbirthLast2YearsCount");
             submission.PregnantWomenCanAccessEmergencyTransportAtNight = ParseBool("SectionC.PregnantWomenCanAccessEmergencyTransportAtNight");
+            submission.ChildrenUnder5DiedLast2Years                    = ParseBool("SectionC.ChildrenUnder5DiedLast2Years");
+            submission.ChildrenUnder5DiedLast2YearsCount               = ParseNullInt("SectionC.ChildrenUnder5DiedLast2YearsCount");
             submission.NearestHealthFacilityIfNone                     = F("SectionC.NearestHealthFacilityIfNoneInCommunity");
             RebuildCollection(submission.HealthFacilities, "SectionC.HealthFacilities", (i, row) => new HealthFacility
             {
@@ -186,6 +233,23 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 InfrastructureWorkQuality        = ParseNullEnum<WorkQualityRating>($"SectionC.HealthFacilities[{i}].InfrastructureWorkQuality"),
                 IDPsAllowedWithoutDiscrimination = ParseNullBool($"SectionC.HealthFacilities[{i}].IDPsAllowedWithoutDiscrimination"),
                 EssentialDrugsAvailability       = ParseNullEnum<DrugAvailability>($"SectionC.HealthFacilities[{i}].EssentialDrugsAvailability")
+            });
+
+            // Section C – Q9: Other health facilities (Pharmacy, Patent Medicine, Mortuary)
+            RebuildCollection(submission.OtherHealthFacilities, "SectionC.OtherHealthFacilities", (i, row) => new OtherHealthFacility
+            {
+                SubmissionId            = submission.Id,
+                Name                    = row("Name"),
+                Location                = row("Location"),
+                Type                    = ParseNullEnum<OtherFacilityType>($"SectionC.OtherHealthFacilities[{i}].Type"),
+                DistanceFromCentre      = ParseNullEnum<DistanceCategory>($"SectionC.OtherHealthFacilities[{i}].DistanceFromCentre"),
+                StaffAvailability       = ParseNullEnum<StaffAvailability>($"SectionC.OtherHealthFacilities[{i}].StaffAvailability"),
+                InfrastructureCondition = ParseNullEnum<InfrastructureCondition>($"SectionC.OtherHealthFacilities[{i}].InfrastructureCondition"),
+                ServiceDeliveryCondition= ParseNullEnum<ServiceDeliveryCondition>($"SectionC.OtherHealthFacilities[{i}].ServiceDeliveryCondition"),
+                WhoBuilt                = row("WhoBuilt"),
+                YearEstablished         = ParseNullInt($"SectionC.OtherHealthFacilities[{i}].YearEstablished"),
+                YearLastRenovated       = ParseNullInt($"SectionC.OtherHealthFacilities[{i}].YearLastRenovated"),
+                InfrastructureWorkQuality = ParseNullEnum<WorkQualityRating>($"SectionC.OtherHealthFacilities[{i}].InfrastructureWorkQuality")
             });
 
             // ── SECTION D ─────────────────────────────────────────────
@@ -263,9 +327,52 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             });
 
             // ── SECTION G ─────────────────────────────────────────────
-            submission.NaturalFeaturesChallenges             = F("SectionG.MajorChallengesWithNaturalFeatures");
+            // Q1: Natural features table
+            RebuildCollection(submission.NaturalFeatures, "SectionG.NaturalFeatures", (i, row) => new NaturalFeature
+            {
+                SubmissionId      = submission.Id,
+                Name              = row("Name"),
+                Type              = ParseNullEnum<NaturalFeatureType>($"SectionG.NaturalFeatures[{i}].Type"),
+                Location          = row("Location"),
+                SupervisorManager = row("SupervisorManager"),
+                CommunityUse      = row("CommunityUse")
+            });
+
+            // Q2: Major challenges with natural features
+            submission.NaturalFeaturesChallenges             = F("SectionG.NaturalFeaturesChallenges");
+
+            // Q3: Industrial activities table
+            RebuildCollection(submission.IndustrialActivities, "SectionG.IndustrialActivities", (i, row) => new IndustrialActivity
+            {
+                SubmissionId             = submission.Id,
+                ActivityType             = ParseNullEnum<IndustrialActivityType>($"SectionG.IndustrialActivities[{i}].ActivityType"),
+                Location                 = row("Location"),
+                Owner                    = row("Owner"),
+                FinishedProducts         = row("FinishedProducts"),
+                Byproducts               = row("Byproducts"),
+                RawMaterials             = row("RawMaterials"),
+                RawMaterialsSourcedFrom  = row("RawMaterialsSourcedFrom"),
+                ProductsSoldWithinCommunity = ParseNullBool($"SectionG.IndustrialActivities[{i}].ProductsSoldWithinCommunity"),
+                CommunityBenefits        = row("CommunityBenefits")
+            });
+
+            // Q4: Mining activities table
+            RebuildCollection(submission.MiningActivities, "SectionG.MiningActivities", (i, row) => new MiningActivity
+            {
+                SubmissionId             = submission.Id,
+                MineralBeingMined        = row("MineralBeingMined"),
+                Location                 = row("Location"),
+                Owner                    = row("Owner"),
+                InputMaterials           = row("InputMaterials"),
+                InputMaterialsSourcedFrom = row("InputMaterialsSourcedFrom"),
+                ProductsSoldWithinCommunity = ParseNullBool($"SectionG.MiningActivities[{i}].ProductsSoldWithinCommunity"),
+                CommunityBenefits        = row("CommunityBenefits"),
+                NegativeImpacts          = row("NegativeImpacts")
+            });
+
             submission.FarmingSubsistence                    = ParseBool("SectionG.FarmingSubsistence");
             submission.FarmingCommercial                     = ParseBool("SectionG.FarmingCommercial");
+            submission.FarmingBoth                           = ParseBool("SectionG.FarmingBoth");
             submission.DomLandResidential                    = ParseBool("SectionG.DomLandResidential");
             submission.DomLandAgricultural                   = ParseBool("SectionG.DomLandAgricultural");
             submission.DomLandCommercial                     = ParseBool("SectionG.DomLandCommercial");
@@ -277,6 +384,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             submission.WaterSourcePipeBorne                  = ParseBool("SectionG.WaterSourcePipeBorne");
             submission.IrrigationSystemsPresent              = ParseBool("SectionG.IrrigationSystemsPresent");
             submission.NumberOfAgriculturalExtensionWorkers  = ParseNullInt("SectionG.NumberOfAgriculturalExtensionWorkers");
+            submission.ExtensionWorkerServices               = F("SectionG.ExtensionWorkerServices");
             submission.FarmlandInaccessibleDueToInsecurity   = ParseBool("SectionG.FarmlandInaccessibleDueToInsecurity");
             submission.PercentFarmlandAbandoned              = ParseNullEnum<FarmlandAbandonmentPercent>("SectionG.PercentFarmlandAbandoned");
             submission.LandDisputesBetweenIndigenesAndIDPs   = ParseBool("SectionG.LandDisputesBetweenIndigenesAndIDPs");
@@ -287,6 +395,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             submission.UrgentTreePlanting                    = ParseBool("SectionG.UrgentTreePlanting");
             submission.UrgentFloodControl                    = ParseBool("SectionG.UrgentFloodControl");
             submission.UrgentPollutionControl                = ParseBool("SectionG.UrgentPollutionControl");
+            submission.OtherUrgentEnvImprovement             = F("SectionG.OtherUrgentEnvImprovement");
 
             // Environmental challenges (one row per type, pre-existing rows updated)
             foreach (var ct in Enum.GetValues<EnvironmentalChallengeType>())
@@ -330,8 +439,18 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 }
                 existing.NumberExisting                        = ParseNullInt($"{prefix}.NumberExisting");
                 existing.EstimatedMembershipPopulation         = ParseNullInt($"{prefix}.EstimatedMembershipPopulation");
+                existing.ContributesToEducation                = ParseBool($"{prefix}.ContributesToEducation");
+                existing.ContributesToHealthServices           = ParseBool($"{prefix}.ContributesToHealthServices");
+                existing.ContributesToPeaceBuilding            = ParseBool($"{prefix}.ContributesToPeaceBuilding");
+                existing.ContributesToCharitySocialWelfare     = ParseBool($"{prefix}.ContributesToCharitySocialWelfare");
+                existing.ContributesToMoralGuidance            = ParseBool($"{prefix}.ContributesToMoralGuidance");
+                existing.ContributesToRoads                    = ParseBool($"{prefix}.ContributesToRoads");
+                existing.ContributesToWater                    = ParseBool($"{prefix}.ContributesToWater");
+                existing.ContributesToElectricity              = ParseBool($"{prefix}.ContributesToElectricity");
                 existing.LeadersActivelyParticipateInPeaceBuilding = ParseNullBool($"{prefix}.LeadersParticipate");
                 existing.NumberNoLongerInUseOrDestroyed        = ParseNullInt($"{prefix}.NumberDestroyed");
+                if (ct == ReligiousWorshipCentreType.Other)
+                    existing.Name = F($"{prefix}.Name");
             }
 
             // ── SECTION I ─────────────────────────────────────────────
@@ -348,22 +467,19 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             submission.InfoChannelSocialMedia       = ParseBool("SectionI.InfoChannelSocialMedia");
             submission.TelecommunicationChallenges  = F("SectionI.TelecommunicationChallenges");
 
-            foreach (var prov in Enum.GetValues<GSMProvider>())
+            // GSM Networks: dynamic rows keyed as SectionI.GSMNetworks[i]
+            RebuildCollection(submission.GSMNetworks, "SectionI.GSMNetworks", (i, row) => new GSMNetwork
             {
-                var prefix  = $"SectionI.GSM.{prov}";
-                var existing = submission.GSMNetworks.FirstOrDefault(n => n.Provider == prov);
-                if (existing is null)
-                {
-                    existing = new GSMNetwork { SubmissionId = submission.Id, Provider = prov };
-                    submission.GSMNetworks.Add(existing);
-                }
-                existing.CoverageStrength = ParseNullEnum<NetworkCoverage>($"{prefix}.Coverage");
-                existing.AvailabilityArea = ParseNullEnum<NetworkAvailability>($"{prefix}.Availability");
-                existing.CallAndSMSQuality = ParseNullEnum<NetworkQuality>($"{prefix}.CallQuality");
-                existing.InternetQuality  = ParseNullEnum<NetworkQuality>($"{prefix}.InternetQuality");
-                existing.NetworkType      = ParseNullEnum<NetworkGeneration>($"{prefix}.NetworkType");
-                existing.AffectedSecurityReportingOrEmergencyCalls = ParseNullBool($"{prefix}.AffectsEmergency");
-            }
+                SubmissionId      = submission.Id,
+                Provider          = ParseNullEnum<GSMProvider>($"SectionI.GSMNetworks[{i}].Provider") ?? GSMProvider.Others,
+                OtherProviderName = row("OtherProviderName"),
+                CoverageStrength  = ParseNullEnum<NetworkCoverage>($"SectionI.GSMNetworks[{i}].CoverageStrength"),
+                AvailabilityArea  = ParseNullEnum<NetworkAvailability>($"SectionI.GSMNetworks[{i}].AvailabilityArea"),
+                CallAndSMSQuality = ParseNullEnum<NetworkQuality>($"SectionI.GSMNetworks[{i}].CallAndSMSQuality"),
+                InternetQuality   = ParseNullEnum<NetworkQuality>($"SectionI.GSMNetworks[{i}].InternetQuality"),
+                NetworkType       = ParseNullEnum<NetworkGeneration>($"SectionI.GSMNetworks[{i}].NetworkType"),
+                AffectedSecurityReportingOrEmergencyCalls = ParseNullBool($"SectionI.GSMNetworks[{i}].AffectedSecurityReportingOrEmergencyCalls")
+            });
 
             // ── SECTION J ─────────────────────────────────────────────
             submission.GeneralSecuritySituation               = ParseNullEnum<SecuritySituation>("SectionJ.GeneralSecuritySituation");
@@ -390,6 +506,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             submission.DisplacementCauseArmedConflict         = ParseBool("SectionJ.DisplacementCauseArmedConflict");
             submission.DisplacementCauseFlooding              = ParseBool("SectionJ.DisplacementCauseFlooding");
             submission.DisplacementCauseCommunalViolence      = ParseBool("SectionJ.DisplacementCauseCommunalViolence");
+            submission.HowCommunityResolvesDisputes           = F("SectionJ.HowCommunityResolvesDisputes");
 
             foreach (var st in Enum.GetValues<SecurityServiceType>())
             {
@@ -408,12 +525,84 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 existing.AverageResponseTime         = ParseNullEnum<ResponseTime>($"{prefix}.ResponseTime");
             }
 
-            // Q18: Electricity Sources
+            foreach (var vt in Enum.GetValues<VulnerabilityType>())
+            {
+                var prefix  = $"SectionJ.Vuln.{vt}";
+                var existing = submission.VulnerableGroups.FirstOrDefault(v => v.Type == vt);
+                if (existing is null)
+                {
+                    existing = new VulnerableGroup { SubmissionId = submission.Id, Type = vt };
+                    submission.VulnerableGroups.Add(existing);
+                }
+                existing.NumberOfPeople               = ParseNullInt($"{prefix}.Number");
+                existing.HasAccessToSpecialServices   = ParseNullBool($"{prefix}.Access");
+                existing.CommunityPerceptionOfPresence= ParseNullEnum<CommunityPresencePerception>($"{prefix}.Perception");
+                existing.CommunityNeedsMoreSupport    = ParseNullBool($"{prefix}.NeedsSupport");
+            }
+
+            foreach (var spt in Enum.GetValues<SocialProtectionType>())
+            {
+                var prefix  = $"SectionJ.SocProt.{spt}";
+                var existing = submission.SocialProtections.FirstOrDefault(s => s.Type == spt);
+                if (existing is null)
+                {
+                    existing = new SocialProtection { SubmissionId = submission.Id, Type = spt };
+                    submission.SocialProtections.Add(existing);
+                }
+                existing.Available              = ParseNullBool($"{prefix}.Available");
+                existing.Provider               = F($"{prefix}.Provider");
+                existing.YearStarted            = ParseNullInt($"{prefix}.YearStarted");
+                existing.MakesRealDifference    = ParseNullBool($"{prefix}.MakesDifference");
+                existing.CommunityFindsAdequate = ParseNullBool($"{prefix}.Adequate");
+                existing.IDPsBenefit            = ParseNullBool($"{prefix}.IDPsBenefit");
+            }
+
+            // Q17 & Q18: Electricity Sources
+            submission.PublicPowerSupplyHours= ParseNullEnum<PublicPowerSupplyHours>("SectionJ.PublicPowerSupplyHours");
             submission.ElecSourcePublicPower = ParseBool("SectionJ.ElecSourcePublicPower");
             submission.ElecSourceGenerators  = ParseBool("SectionJ.ElecSourceGenerators");
             submission.ElecSourceSolarPower  = ParseBool("SectionJ.ElecSourceSolarPower");
             submission.ElecSourceOther       = ParseBool("SectionJ.ElecSourceOther");
             submission.ElecSourceOtherSpecify= F("SectionJ.ElecSourceOtherSpecify");
+
+            // Q11: Security Programmes
+            RebuildCollection(submission.SecurityProgrammes, "SectionJ.SecProg", (i, row) => new SecurityProgramme
+            {
+                SubmissionId               = submission.Id,
+                Name                       = row("Name"),
+                NumberOfOperatives         = ParseNullInt($"SectionJ.SecProg[{i}].Number"),
+                MainActivity               = row("Activity"),
+                CommunityRole              = ParseNullEnum<CommunityRoleInProgramme>($"SectionJ.SecProg[{i}].Role"),
+                CommunityPerception        = ParseNullEnum<CommunityPerceptionRating>($"SectionJ.SecProg[{i}].Perception"),
+                CommunityNeedsMoreOperatives = ParseNullBool($"SectionJ.SecProg[{i}].NeedsMore")
+            });
+
+            // Q12: Security Incidents
+            RebuildCollection(submission.SecurityIncidents, "SectionJ.SecInc", (i, row) => new SecurityIncident
+            {
+                SubmissionId            = submission.Id,
+                Incident                = row("Incident"),
+                Cause                   = row("Cause"),
+                YearOccurred            = ParseNullInt($"SectionJ.SecInc[{i}].YearOccurred"),
+                StillImpactingCommunity = ParseNullBool($"SectionJ.SecInc[{i}].StillImpacting"),
+                YearEffortsToAddress    = ParseNullInt($"SectionJ.SecInc[{i}].YearEfforts"),
+                WhoMadeEfforts          = row("WhoMadeEfforts"),
+                HelpNeeded              = row("HelpNeeded")
+            });
+
+            // Q13: IDP Camps
+            RebuildCollection(submission.IDPCamps, "SectionJ.IDPCamp", (i, row) => new IDPCamp
+            {
+                SubmissionId                  = submission.Id,
+                Name                          = row("Name"),
+                Location                      = row("Location"),
+                NumberOfIDPHouseholds         = ParseNullInt($"SectionJ.IDPCamp[{i}].Households"),
+                LivingConditions              = ParseNullEnum<GeneralRating>($"SectionJ.IDPCamp[{i}].Conditions"),
+                CampLargeEnough               = ParseNullBool($"SectionJ.IDPCamp[{i}].LargeEnough"),
+                SecurityInCampAdequate        = ParseNullBool($"SectionJ.IDPCamp[{i}].SecurityAdequate"),
+                WomenAndGirlsExposedToGBV     = ParseNullBool($"SectionJ.IDPCamp[{i}].GBV"),
+                RelationshipWithHostCommunity = ParseNullEnum<CommunityRelationship>($"SectionJ.IDPCamp[{i}].Relationship")
+            });
 
             // Q17: MigrantSettlerActivities
             RebuildCollection(submission.MigrantSettlerActivities, "SectionJ.MigrantSettler", (i, row) => new MigrantSettlerActivity
@@ -441,6 +630,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             });
 
             // ── SECTION K — Priority Needs ────────────────────────────
+            submission.PriorityNeeds.Clear();
             for (int rank = 1; rank <= 5; rank++)
             {
                 var desc = F($"SectionK.PriorityNeed{rank}");
@@ -454,6 +644,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             }
 
             // ── CONSENT ────────────────────────────────────────────────
+            submission.ConsentSignatories.Clear();
             var sigRoles = new[] { "TraditionalRuler", "WomenLeader", "YouthLeader", "ReligiousLeader" };
             foreach (var role in sigRoles)
             {
@@ -536,6 +727,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             string prefix,
             Func<int, Func<string, string?>, T> factory)
         {
+            collection.Clear();
             for (int i = 0; ; i++)
             {
                 // Check if any field for this index exists
