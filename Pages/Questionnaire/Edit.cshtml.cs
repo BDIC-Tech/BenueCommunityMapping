@@ -57,9 +57,9 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 var auth = await _authz.AuthorizeAsync(User, existing, new SubmissionOwnerRequirement());
                 if (!auth.Succeeded) return Forbid();
 
-                if (existing.Status != SubmissionStatus.Draft && user.CachedRole != AppRoles.Admin)
+                if (existing.Status != SubmissionStatus.Draft && existing.Status != SubmissionStatus.Rejected && user.CachedRole != AppRoles.Admin)
                 {
-                    TempData["Error"] = "Only Draft submissions can be edited.";
+                    TempData["Error"] = "Only Draft or Rejected submissions can be edited.";
                     return RedirectToPage("/Agent/MySubmissions");
                 }
 
@@ -685,7 +685,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
                 if (submission.CommunityId == 0)
                 { TempData["Error"] = "Community selection required."; return RedirectToPage(new { id = submissionId }); }
 
-                await _submissions.SubmitAsync(submissionId);
+                await _submissions.SubmitAsync(submissionId, user.Id);
                 TempData["Success"] = "Questionnaire submitted for coordinator review!";
                 return RedirectToPage("/Agent/MySubmissions");
             }

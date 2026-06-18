@@ -45,6 +45,31 @@
 <form method="post" id="qForm">
   <input type="hidden" name="submissionId" value="@s.Id" />
 
+  @if (s.WorkflowHistory != null && s.WorkflowHistory.Any(h => h.Action == "Rejected"))
+  {
+    <div class="content-card mb-3 border-danger" style="border: 1px solid var(--bsbs-red) !important;">
+      <div class="content-card-header bg-danger text-white" style="background-color: var(--bsbs-red) !important; padding: .6rem 1.25rem;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <h5 class="ms-2 mb-0 d-inline-block">Rejection Feedback</h5>
+      </div>
+      <div class="content-card-body pb-2" style="background-color: #fdf2f2; padding: 1rem 1.25rem;">
+        <p class="text-danger fw-semibold mb-2"><i class="bi bi-info-circle me-1"></i>This questionnaire was rejected by a reviewer. Please review the comments below and make the necessary corrections before resubmitting:</p>
+        @foreach (var h in s.WorkflowHistory.Where(h => h.Action == "Rejected").OrderByDescending(h => h.CreatedAt))
+        {
+          <div class="info-note py-2 px-3 mb-2" style="border-left-color: var(--bsbs-red); background: #ffffff; color: var(--bsbs-red); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+              <div>
+                <i class="bi bi-chat-left-text-fill me-1 text-danger"></i>
+                <strong>Reason:</strong> <span class="text-dark">@h.Comments</span>
+              </div>
+              <small class="text-muted ms-auto">By @(h.Actor?.FullName ?? "Reviewer") (@h.ActorRole) on @h.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
   <!-- ══ SECTION A ══════════════════════════════════════════════ -->
   <div class="tab-pane content-card rounded-top-0 active" id="tab-0">
     <div class="content-card-header"><i class="bi bi-geo-alt-fill"></i><h5>Section A: Community Identification</h5></div>

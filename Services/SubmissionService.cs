@@ -35,8 +35,8 @@ namespace BenueCommunityMapping.Services
         Task<QuestionnaireSubmission?> GetByIdAsync(Guid id);
         Task<QuestionnaireSubmission>  CreateDraftAsync(string agentId, string? coordinatorId, int communityId);
         Task                           SaveAsync(QuestionnaireSubmission submission);
-        Task                           SubmitAsync(Guid id);
-        Task                           UpdateStatusAsync(Guid id, SubmissionStatus newStatus, string? notes, string actorRole);
+        Task                           SubmitAsync(Guid id, string actorId);
+        Task                           UpdateStatusAsync(Guid id, SubmissionStatus newStatus, string? notes, string actorId, string actorRole);
         Task                           DeleteAsync(Guid id);
         Task<DashboardStats>           GetStatsAsync(ApplicationUser caller);
     }
@@ -100,7 +100,7 @@ namespace BenueCommunityMapping.Services
         public async Task<QuestionnaireSubmission?> GetByIdAsync(Guid id) =>
             await WithIncludes()
                 .AsSplitQuery()
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .Include(s => s.Markets)
                 .Include(s => s.HealthFacilities)
                 .Include(s => s.OtherHealthFacilities)
@@ -123,6 +123,8 @@ namespace BenueCommunityMapping.Services
                 .Include(s => s.NGOs)
                 .Include(s => s.PriorityNeeds)
                 .Include(s => s.ConsentSignatories)
+                .Include(s => s.WorkflowHistory)
+                    .ThenInclude(h => h.Actor)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
         public async Task<QuestionnaireSubmission> CreateDraftAsync(
@@ -195,6 +197,10 @@ namespace BenueCommunityMapping.Services
                 submission.CoordinatorId = preservedCoordId;
                 submission.CommunityId   = preservedCommId;
 
+                // Clear WorkflowHistory so EF Core's Update graph traversal doesn't
+                // emit unnecessary UPDATE statements for unchanged history rows.
+                submission.WorkflowHistory = new List<QuestionnaireWorkflowHistory>();
+
                 // Reset identity Ids BEFORE Update so EF Core sees them as new (Added) entities
                 foreach (var e in submission.Markets) e.Id = 0;
                 foreach (var e in submission.HealthFacilities) e.Id = 0;
@@ -227,18 +233,34 @@ namespace BenueCommunityMapping.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task SubmitAsync(Guid id)
+        public async Task SubmitAsync(Guid id, string actorId)
         {
             var s = await _db.Submissions.FindAsync(id)
                 ?? throw new KeyNotFoundException($"Submission {id} not found.");
+
+            // Check if it has been submitted/rejected before to log as Resubmitted
+            var hasBeenSubmitted = await _db.WorkflowHistories.AnyAsync(h => h.SubmissionId == id && (h.Action == "Submitted" || h.Action == "Resubmitted"));
+            var actionStr = hasBeenSubmitted ? "Resubmitted" : "Submitted";
+
             s.Status      = SubmissionStatus.Submitted;
             s.SubmittedAt = DateTime.UtcNow;
             s.UpdatedAt   = DateTime.UtcNow;
+
+            var history = new QuestionnaireWorkflowHistory
+            {
+                SubmissionId = id,
+                Action = actionStr,
+                ActorId = actorId,
+                ActorRole = AppRoles.Agent,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.WorkflowHistories.Add(history);
+
             await _db.SaveChangesAsync();
         }
 
         public async Task UpdateStatusAsync(
-            Guid id, SubmissionStatus newStatus, string? notes, string actorRole)
+            Guid id, SubmissionStatus newStatus, string? notes, string actorId, string actorRole)
         {
             var s = await _db.Submissions.FindAsync(id)
                 ?? throw new KeyNotFoundException($"Submission {id} not found.");
@@ -246,6 +268,27 @@ namespace BenueCommunityMapping.Services
             s.UpdatedAt = DateTime.UtcNow;
             if (actorRole == AppRoles.Coordinator) s.CoordinatorNotes = notes;
             else if (actorRole == AppRoles.Admin)  s.AdminNotes       = notes;
+
+            var actionStr = newStatus switch
+            {
+                SubmissionStatus.ReviewedByCoordinator => "Reviewed",
+                SubmissionStatus.ApprovedByAdmin => "Approved",
+                SubmissionStatus.Rejected => "Rejected",
+                SubmissionStatus.Submitted => "Submitted",
+                _ => newStatus.ToString()
+            };
+
+            var history = new QuestionnaireWorkflowHistory
+            {
+                SubmissionId = id,
+                Action = actionStr,
+                ActorId = actorId,
+                ActorRole = actorRole,
+                Comments = notes,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.WorkflowHistories.Add(history);
+
             await _db.SaveChangesAsync();
 
             // Refresh snapshots in background scope (avoids circular DI)

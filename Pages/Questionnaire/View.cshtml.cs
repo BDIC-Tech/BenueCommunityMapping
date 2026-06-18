@@ -52,6 +52,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             await _submissions.UpdateStatusAsync(
                 id, SubmissionStatus.ReviewedByCoordinator,
                 $"Reviewed by {user!.FullName} on {DateTime.Now:dd MMM yyyy}",
+                user!.Id,
                 AppRoles.Coordinator);
 
             TempData["Success"] = "Marked as reviewed.";
@@ -68,6 +69,7 @@ namespace BenueCommunityMapping.Pages.Questionnaire
             await _submissions.UpdateStatusAsync(
                 id, SubmissionStatus.ApprovedByAdmin,
                 $"Approved by {user!.FullName} on {DateTime.Now:dd MMM yyyy}",
+                user!.Id,
                 AppRoles.Admin);
 
             TempData["Success"] = "Submission approved.";
@@ -75,16 +77,25 @@ namespace BenueCommunityMapping.Pages.Questionnaire
         }
 
         // ── Admin: reject ──────────────────────────────────────────
-        public async Task<IActionResult> OnPostRejectAsync(Guid id)
+        public async Task<IActionResult> OnPostRejectAsync(Guid id, string reason)
         {
             var guard = await LoadAndAuthoriseAsync(id);
             if (guard is not null) return guard;
 
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "Rejection reason is mandatory.";
+                return RedirectToPage(new { id });
+            }
+
             var user = await _userMgr.GetUserAsync(User);
+            var role = (await _userMgr.GetRolesAsync(user!)).FirstOrDefault() ?? AppRoles.Admin;
+
             await _submissions.UpdateStatusAsync(
                 id, SubmissionStatus.Rejected,
-                $"Rejected by {user!.FullName} on {DateTime.Now:dd MMM yyyy}",
-                AppRoles.Admin);
+                reason,
+                user!.Id,
+                role);
 
             TempData["Success"] = "Submission rejected.";
             return RedirectToPage(new { id });

@@ -89,12 +89,15 @@
                      class="btn btn-sm btn-bsbs-outline" title="View">
                     <i class="bi bi-eye"></i>
                   </a>
-                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.Draft)
+                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.Draft || s.Status == BenueCommunityMapping.Models.SubmissionStatus.Rejected)
                   {
                     <a asp-page="/Questionnaire/Edit" asp-route-id="@s.Id"
                        class="btn btn-sm btn-bsbs-primary" title="Edit">
                       <i class="bi bi-pencil"></i>
                     </a>
+                  }
+                  @if (s.Status == BenueCommunityMapping.Models.SubmissionStatus.Draft)
+                  {
                     <form method="post" asp-page="/Questionnaire/Delete" asp-route-id="@s.Id"
                           onsubmit="return confirm('Delete this draft?')">
                       <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">

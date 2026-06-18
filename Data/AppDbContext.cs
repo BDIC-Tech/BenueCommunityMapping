@@ -46,6 +46,7 @@ namespace BenueCommunityMapping.Data
         public DbSet<NGO>                    NGOs                     { get; set; }
         public DbSet<PriorityNeed>           PriorityNeeds            { get; set; }
         public DbSet<ConsentSignatory>       ConsentSignatories       { get; set; }
+        public DbSet<QuestionnaireWorkflowHistory> WorkflowHistories  { get; set; }
 
         protected override void OnModelCreating(ModelBuilder b)
         {
@@ -127,6 +128,24 @@ namespace BenueCommunityMapping.Data
                 e.HasIndex(s => s.CoordinatorId);
                 e.HasIndex(s => s.SubmittedAt);
             });
+
+            b.Entity<QuestionnaireWorkflowHistory>(e =>
+            {
+                e.HasKey(h => h.Id);
+
+                e.HasOne(h => h.Submission)
+                 .WithMany(s => s.WorkflowHistory)
+                 .HasForeignKey(h => h.SubmissionId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(h => h.Actor)
+                 .WithMany()
+                 .HasForeignKey(h => h.ActorId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(h => h.SubmissionId);
+                e.HasIndex(h => h.ActorId);
+            });
             
             b.Entity<AnalyticsSnapshot>(entity =>
             {
@@ -156,43 +175,47 @@ namespace BenueCommunityMapping.Data
             });
 
             // ── Detail tables: FK to Submission + cascade + index ─────────
-            // Each detail table has SubmissionId (int FK) and a Submission nav.
-            ConfigDetail<Market>(b);
-            ConfigDetail<HealthFacility>(b);
-            ConfigDetail<OtherHealthFacility>(b);
-            ConfigDetail<EducationalInstitution>(b);
-            ConfigDetail<AccessRoad>(b);
-            ConfigDetail<FinancialService>(b);
-            ConfigDetail<NaturalFeature>(b);
-            ConfigDetail<IndustrialActivity>(b);
-            ConfigDetail<MiningActivity>(b);
-            ConfigDetail<EnvironmentalChallenge>(b);
-            ConfigDetail<ReligiousGroup>(b);
-            ConfigDetail<GSMNetwork>(b);
-            ConfigDetail<SecurityService>(b);
-            ConfigDetail<VulnerableGroup>(b);
-            ConfigDetail<SocialProtection>(b);
-            ConfigDetail<SecurityProgramme>(b);
-            ConfigDetail<SecurityIncident>(b);
-            ConfigDetail<IDPCamp>(b);
-            ConfigDetail<MigrantSettlerActivity>(b);
-            ConfigDetail<NGO>(b);
-            ConfigDetail<PriorityNeed>(b);
-            ConfigDetail<ConsentSignatory>(b);
+            // Each detail table has SubmissionId FK pointing to QuestionnaireSubmission.
+            // Inverse navigation properties are explicitly specified so EF Core
+            // correctly populates them even with AsNoTrackingWithIdentityResolution + AsSplitQuery.
+            ConfigDetail<Market>(b, nameof(QuestionnaireSubmission.Markets));
+            ConfigDetail<HealthFacility>(b, nameof(QuestionnaireSubmission.HealthFacilities));
+            ConfigDetail<OtherHealthFacility>(b, nameof(QuestionnaireSubmission.OtherHealthFacilities));
+            ConfigDetail<EducationalInstitution>(b, nameof(QuestionnaireSubmission.EducationalInstitutions));
+            ConfigDetail<AccessRoad>(b, nameof(QuestionnaireSubmission.AccessRoads));
+            ConfigDetail<FinancialService>(b, nameof(QuestionnaireSubmission.FinancialServices));
+            ConfigDetail<NaturalFeature>(b, nameof(QuestionnaireSubmission.NaturalFeatures));
+            ConfigDetail<IndustrialActivity>(b, nameof(QuestionnaireSubmission.IndustrialActivities));
+            ConfigDetail<MiningActivity>(b, nameof(QuestionnaireSubmission.MiningActivities));
+            ConfigDetail<EnvironmentalChallenge>(b, nameof(QuestionnaireSubmission.EnvironmentalChallenges));
+            ConfigDetail<ReligiousGroup>(b, nameof(QuestionnaireSubmission.ReligiousGroups));
+            ConfigDetail<GSMNetwork>(b, nameof(QuestionnaireSubmission.GSMNetworks));
+            ConfigDetail<SecurityService>(b, nameof(QuestionnaireSubmission.SecurityServices));
+            ConfigDetail<VulnerableGroup>(b, nameof(QuestionnaireSubmission.VulnerableGroups));
+            ConfigDetail<SocialProtection>(b, nameof(QuestionnaireSubmission.SocialProtections));
+            ConfigDetail<SecurityProgramme>(b, nameof(QuestionnaireSubmission.SecurityProgrammes));
+            ConfigDetail<SecurityIncident>(b, nameof(QuestionnaireSubmission.SecurityIncidents));
+            ConfigDetail<IDPCamp>(b, nameof(QuestionnaireSubmission.IDPCamps));
+            ConfigDetail<MigrantSettlerActivity>(b, nameof(QuestionnaireSubmission.MigrantSettlerActivities));
+            ConfigDetail<NGO>(b, nameof(QuestionnaireSubmission.NGOs));
+            ConfigDetail<PriorityNeed>(b, nameof(QuestionnaireSubmission.PriorityNeeds));
+            ConfigDetail<ConsentSignatory>(b, nameof(QuestionnaireSubmission.ConsentSignatories));
         }
 
         /// <summary>
         /// Configures the standard FK (SubmissionId → QuestionnaireSubmission),
         /// cascade-delete, and an index for every section detail table.
+        /// The inverse navigation property name on QuestionnaireSubmission is specified explicitly.
         /// </summary>
-        private static void ConfigDetail<T>(ModelBuilder b) where T : class
+        private static void ConfigDetail<T>(ModelBuilder b, string inverseNav)
+            where T : class
         {
             b.Entity<T>(e =>
             {
                 e.HasOne(typeof(QuestionnaireSubmission), "Submission")
-                 .WithMany()
+                 .WithMany(inverseNav)
                  .HasForeignKey("SubmissionId")
-                 .OnDelete(DeleteBehavior.Cascade); // safe: single path through Submission
+                 .OnDelete(DeleteBehavior.Cascade);
                 e.HasIndex("SubmissionId");
             });
         }

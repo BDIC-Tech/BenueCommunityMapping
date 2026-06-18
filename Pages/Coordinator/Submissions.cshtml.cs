@@ -44,18 +44,25 @@ namespace BenueCommunityMapping.Pages.Coordinator
             await _submissions.UpdateStatusAsync(
                 id, SubmissionStatus.ReviewedByCoordinator,
                 $"Reviewed by {user.FullName} on {DateTime.Now:dd MMM yyyy}",
+                user.Id,
                 AppRoles.Coordinator);
 
             TempData["Success"] = "Submission marked as reviewed.";
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostRejectAsync(Guid id)
+        public async Task<IActionResult> OnPostRejectAsync(Guid id, string reason)
         {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "Rejection reason is mandatory.";
+                return RedirectToPage();
+            }
             var user = await GetCallerAsync();
             await _submissions.UpdateStatusAsync(
                 id, SubmissionStatus.Rejected,
-                $"Rejected by {user.FullName} on {DateTime.Now:dd MMM yyyy}",
+                reason,
+                user.Id,
                 AppRoles.Coordinator);
 
             TempData["Success"] = "Submission rejected.";

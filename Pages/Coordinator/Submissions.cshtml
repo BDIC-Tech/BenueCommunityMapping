@@ -92,7 +92,7 @@
                        s.Status == BenueCommunityMapping.Models.SubmissionStatus.ReviewedByCoordinator)
                   {
                     <form method="post" asp-page-handler="Reject" asp-route-id="@s.Id"
-                          onsubmit="return confirm('Reject this submission?')">
+                          onsubmit="return confirmReject(this)">
                       <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-x-circle me-1"></i>Reject
                       </button>
@@ -122,3 +122,41 @@
     </div>
   }
 </div>
+
+@section Scripts {
+  <link href="~/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+  <script src="~/libs/sweetalert2/sweetalert2.all.min.js"></script>
+  <script>
+    function confirmReject(form) {
+      Swal.fire({
+        title: 'Reject Questionnaire?',
+        text: 'Please provide a mandatory reason for rejecting this questionnaire:',
+        input: 'textarea',
+        inputPlaceholder: 'Type your rejection reason here...',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-x-circle me-1"></i>Yes, Reject',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value || !value.trim()) {
+            return 'You must enter a rejection reason!';
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          let input = form.querySelector('input[name="reason"]');
+          if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'reason';
+            form.appendChild(input);
+          }
+          input.value = result.value.trim();
+          form.submit();
+        }
+      });
+      return false;
+    }
+  </script>
+}

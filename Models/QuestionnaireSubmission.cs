@@ -189,5 +189,6 @@ namespace BenueCommunityMapping.Models
 
         public ICollection<PriorityNeed>          PriorityNeeds           { get; set; } = new List<PriorityNeed>();
         public ICollection<ConsentSignatory>      ConsentSignatories      { get; set; } = new List<ConsentSignatory>();
+        public ICollection<QuestionnaireWorkflowHistory> WorkflowHistory  { get; set; } = new List<QuestionnaireWorkflowHistory>();
     }
 }

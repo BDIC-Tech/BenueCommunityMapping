@@ -30,7 +30,7 @@
 <body>
 <div class="login-card">
   <div class="login-header">
-    <div class="login-seal"><i class="bi bi-shield-fill-check"></i></div>
+            <div class="mb-3"><img src="~/images/bsbs-logo.png" style="width: 80px; height: 40px;" alt="BSBS LOGO" /></div>
     <h1>BSBS Community Mapping</h1>
     <p>Benue State Bureau of Statistics – Field Data System</p>
   </div>
@@ -59,18 +59,21 @@
 
       <div class="mb-3">
         <label asp-for="Input.Email" class="form-label fw-semibold">Email Address</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-          <input asp-for="Input.Email" class="form-control" placeholder="your@email.ng" autocomplete="username" />
+        <div class="position-relative">
+          <i class="bi bi-envelope position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="pointer-events:none;"></i>
+          <input asp-for="Input.Email" class="form-control ps-5" placeholder="your@email.ng" autocomplete="username" />
         </div>
         <span asp-validation-for="Input.Email" class="text-danger small"></span>
       </div>
 
       <div class="mb-4">
         <label asp-for="Input.Password" class="form-label fw-semibold">Password</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-lock"></i></span>
-          <input asp-for="Input.Password" class="form-control" placeholder="••••••••" autocomplete="current-password" />
+        <div class="position-relative">
+          <i class="bi bi-lock position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="pointer-events:none;"></i>
+          <input asp-for="Input.Password" class="form-control ps-5 pe-5" placeholder="••••••••" autocomplete="current-password" id="passwordField" />
+          <button type="button" class="position-absolute top-50 end-0 translate-middle-y btn border-0 me-1 p-1" onclick="togglePassword()" tabindex="-1" style="background:transparent; color:#6c757d;">
+            <i class="bi bi-eye" id="togglePasswordIcon" style="font-size:1.1rem;"></i>
+          </button>
         </div>
         <span asp-validation-for="Input.Password" class="text-danger small"></span>
         <div class="d-flex justify-content-between mt-1">
@@ -104,5 +107,18 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function togglePassword() {
+    var pwd = document.getElementById('passwordField');
+    var icon = document.getElementById('togglePasswordIcon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  }
+</script>
 </body>
 </html>
